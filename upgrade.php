@@ -70,7 +70,7 @@ page_start(['title' => t('up_title'), 'noindex' => true, 'body_class' => 'page-a
       <?php endif; ?>
 
       <div class="field"><span class="label"><?= e(t('up_years')) ?></span>
-        <div class="seg"><?php foreach ([1, 2, 3] as $y): ?><input type="radio" name="years" id="y<?= $y ?>" value="<?= $y ?>" <?= $y === 1 ? 'checked' : '' ?>><label for="y<?= $y ?>"><?= $y ?> <?= e($y === 1 ? t('up_year') : t('up_years_pl')) ?> · RM<?= (int) cfg('plans.premium.myr') * $y ?></label><?php endforeach; ?></div>
+        <div class="seg"><?php foreach ([1, 2, 3] as $y): ?><input type="radio" name="years" id="y<?= $y ?>" value="<?= $y ?>" <?= $y === 1 ? 'checked' : '' ?>><label for="y<?= $y ?>"><?= $y ?> <?= e($y === 1 ? t('up_year') : t('up_years_pl')) ?> · RM<?= rtrim(rtrim(number_format(premium_price_sen() * $y / 100, 2), "0"), ".") ?></label><?php endforeach; ?></div>
         <?php if ($cur !== 'MYR'): ?><p class="hint"><?= e(t('up_charged_myr', ['usd' => price('premium', 'USD')])) ?></p><?php endif; ?>
       </div>
 

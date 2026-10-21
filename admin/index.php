@@ -38,6 +38,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 set_setting($k, trim((string) ($_POST[$k] ?? '')));
             }
             flash('ok', 'Settings saved.');
+        } elseif ($act === 'pricing') {
+            foreach ($plans as $p) {
+                foreach (['usd', 'myr', 'max_links'] as $k) {
+                    $v = trim((string) ($_POST["plan_{$p}_{$k}"] ?? ''));
+                    if ($v !== '' && (!is_numeric($v) || $v < 0)) {
+                        throw new InvalidArgumentException("Invalid value for $p $k");
+                    }
+                    set_setting("plan.$p.$k", $v === '' ? '' : (string) ($k === 'max_links' ? (int) $v : round((float) $v, 2)));
+                }
+            }
+            flash('ok', 'Pricing saved.');
         }
     } catch (Throwable $e) {
         error_log('admin: ' . $e->getMessage());
@@ -121,7 +132,22 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
   </table></div>
 
   <?php else: ?>
-  <form method="post" class="card form-narrow"><?= csrf_field() ?><input type="hidden" name="act" value="setting">
+  <form method="post" class="card form-narrow"><?= csrf_field() ?><input type="hidden" name="act" value="pricing">
+    <h3 style="margin-bottom:6px"><?= e(t('admin_pricing')) ?></h3>
+    <p class="muted small"><?= e(t('admin_pricing_hint')) ?> Empty = use config.php default.</p>
+    <div class="table-wrap"><table class="table">
+      <tr><th>Plan</th><th>USD / year (wsap.me)</th><th>RM / year (wsap.my, charged)</th><th>Max links (0 = unlimited)</th></tr>
+      <?php foreach ($plans as $p): $pc = plan_cfg($p); ?>
+      <tr><td><b><?= e(plan_name($p)) ?></b></td>
+        <td><input class="input" name="plan_<?= $p ?>_usd" type="number" step="0.01" min="0" value="<?= e(setting("plan.$p.usd")) ?>" placeholder="<?= e((string) cfg("plans.$p.usd")) ?>"></td>
+        <td><input class="input" name="plan_<?= $p ?>_myr" type="number" step="0.01" min="0" value="<?= e(setting("plan.$p.myr")) ?>" placeholder="<?= e((string) cfg("plans.$p.myr")) ?>"></td>
+        <td><input class="input" name="plan_<?= $p ?>_max_links" type="number" step="1" min="0" value="<?= e(setting("plan.$p.max_links")) ?>" placeholder="<?= e((string) cfg("plans.$p.max_links")) ?>"></td></tr>
+      <?php endforeach; ?>
+    </table></div>
+    <p class="muted small" style="margin-top:10px">Currently in effect: Premium <?= e(price('premium', 'USD')) ?> / <?= e(price('premium', 'MYR')) ?> a year · Business <?= e(price('business', 'USD')) ?> / <?= e(price('business', 'MYR')) ?> a year.</p>
+    <button class="btn btn-primary">Save pricing</button>
+  </form>
+  <form method="post" class="card form-narrow" style="margin-top:18px"><?= csrf_field() ?><input type="hidden" name="act" value="setting">
     <div class="field"><label for="announcement">Announcement bar (empty = hidden)</label><input class="input" id="announcement" name="announcement" value="<?= e(setting('announcement')) ?>"></div>
     <p class="muted small">Secrets (DB, Brevo, Google, support WhatsApp) live in <code>config.local.php</code> on the server, not here.</p>
     <button class="btn btn-primary">Save</button>

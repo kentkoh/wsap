@@ -21,7 +21,7 @@ function link_is_premium(array $link, ?array $owner = null): bool
 /** Premium price in sen (MYR), from config plans.premium.myr. */
 function premium_price_sen(string $plan = 'premium'): int
 {
-    return (int) round(((float) cfg('plans.' . $plan . '.myr')) * 100);
+    return (int) round(((float) plan_cfg($plan)['myr']) * 100);
 }
 
 /** Start a checkout for a link: creates a pending payment + Billplz bill, returns the bill URL. */

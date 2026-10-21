@@ -51,9 +51,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             flash('ok', t('link_saved'));
             redirect('/dashboard');
         }
-        $max = (int) cfg('plans.' . user_plan($u) . '.max_links');
-        if (count_user_links((int) $u['id']) >= $max) {
-            throw new InvalidArgumentException(t('err_limit', ['n' => $max]));
+        if (!can_add_link($u)) {
+            throw new InvalidArgumentException(t('err_limit', ['n' => plan_max_links(user_plan($u))]));
         }
         $phone = normalize_phone((string) ($_POST['cc'] ?? ''), (string) ($_POST['phone'] ?? ''));
         $opts = ['user_id' => (int) $u['id'], 'title' => $title, 'domain' => (string) ($_POST['domain'] ?? current_domain())];

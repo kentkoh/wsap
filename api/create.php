@@ -25,9 +25,8 @@ $user = current_user();
 try {
     $opts = ['domain' => (string) ($_POST['domain'] ?? current_domain())];
     if ($user) {
-        $max = (int) cfg('plans.' . user_plan($user) . '.max_links');
-        if (count_user_links((int) $user['id']) >= $max) {
-            json_out(['ok' => false, 'error' => t('err_limit', ['n' => $max])], 403);
+        if (!can_add_link($user)) {
+            json_out(['ok' => false, 'error' => t('err_limit', ['n' => plan_max_links(user_plan($user))])], 403);
         }
         $opts['user_id'] = (int) $user['id'];
     } else {

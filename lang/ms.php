@@ -309,4 +309,7 @@ return [
     'mail_expired_title' => 'Premium telah tamat',
     'mail_expired_body' => 'Premium untuk {link} tamat pada {date}. Link anda masih berfungsi dan data disimpan. Perbaharui bila-bila masa untuk aktifkan semula ciri Premium.',
     'admin_payments' => 'Pembayaran',
+    'dash_links_count' => '{n} link · {p} Premium',
+    'admin_pricing' => 'Harga & had',
+    'admin_pricing_hint' => 'Harga dikira setiap link setahun. Biarkan had 0 untuk link tanpa had.',
 ];

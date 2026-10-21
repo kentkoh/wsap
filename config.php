@@ -33,11 +33,12 @@ return [
   'code_length'   => 6,
 
   // Plans. Prices are per LINK per YEAR (walink style) in the two display currencies.
-  // Phase 1: upgrades are handled manually by admin; Billplz checkout comes in Phase 2.
+  // These are defaults only: admin can change prices and limits at /admin?tab=settings
+  // (stored in the settings table). max_links 0 = unlimited.
   'plans' => [
-    'free'     => ['name' => 'Free',     'usd' => 0,  'myr' => 0,  'max_links' => 3],
-    'premium'  => ['name' => 'Premium',  'usd' => 9,  'myr' => 39, 'max_links' => 1000],
-    'business' => ['name' => 'Business', 'usd' => 19, 'myr' => 79, 'max_links' => 1000],
+    'free'     => ['name' => 'Free',     'usd' => 0,  'myr' => 0,  'max_links' => 0],
+    'premium'  => ['name' => 'Premium',  'usd' => 9,  'myr' => 39, 'max_links' => 0],
+    'business' => ['name' => 'Business', 'usd' => 19, 'myr' => 79, 'max_links' => 0],
   ],
 
   // Billplz (https://www.billplz.com → Settings → Account → API Secret Key, X Signature Key; Billing → Collections)

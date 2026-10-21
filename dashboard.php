@@ -6,7 +6,8 @@ require __DIR__ . '/lib/layout.php';
 $u = require_login();
 $links = user_links((int) $u['id']);
 $plan = user_plan($u);
-$max = (int) cfg('plans.' . $plan . '.max_links');
+$max = plan_max_links($plan);
+$premiumCount = count(array_filter($links, fn($l) => link_is_premium($l, $u)));
 $wa = (string) cfg('support_whatsapp');
 
 page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page-app']);
@@ -19,8 +20,8 @@ page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page
   <?php endif; ?>
   <div class="app-head">
     <h1><?= e(t('dash_title')) ?></h1>
-    <span class="plan-chip"><?= e(t('dash_plan')) ?>: <b><?= e(plan_name($plan)) ?></b> · <?= e(t('dash_links_used', ['used' => count($links), 'max' => $max])) ?>
-      <?php if ($plan === 'free'): ?> · <a href="/upgrade"><?= e(t('dash_upgrade')) ?></a><?php endif; ?></span>
+    <span class="plan-chip"><?= e(t('dash_links_count', ['n' => count($links), 'p' => $premiumCount])) ?><?= $max > 0 ? ' · ' . e(t('dash_links_used', ['used' => count($links), 'max' => $max])) : '' ?>
+      <?php if ($plan !== 'free'): ?> · <b><?= e(plan_name($plan)) ?></b><?php endif; ?> · <a href="/upgrade"><?= e(t('dash_upgrade')) ?></a></span>
     <?php if (($u['role'] ?? '') === ROLE_ADMIN): ?><a class="btn btn-ghost btn-sm" href="/admin" style="margin-left:auto">Admin</a><?php endif; ?>
     <a class="btn btn-primary" href="/link" <?= ($u['role'] ?? '') === ROLE_ADMIN ? 'style="margin-left:0"' : '' ?>>+ <?= e(t('dash_new')) ?></a>
     <form method="post" action="/logout" style="margin:0"><?= csrf_field() ?><button class="btn btn-ghost btn-sm" type="submit"><?= e(t('nav_logout')) ?></button></form>

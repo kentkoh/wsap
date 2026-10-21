@@ -328,4 +328,7 @@ return [
     'mail_expired_title' => 'Premium has expired',
     'mail_expired_body' => 'Premium for {link} ended on {date}. Your link still works and your data is kept. Renew anytime to switch Premium features back on.',
     'admin_payments' => 'Payments',
+    'dash_links_count' => '{n} links · {p} Premium',
+    'admin_pricing' => 'Pricing & limits',
+    'admin_pricing_hint' => 'Prices are per link per year. Leave a limit at 0 for unlimited links.',
 ];

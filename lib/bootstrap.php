@@ -309,15 +309,45 @@ function json_out(array $data, int $status = 200): never
     exit;
 }
 
+/**
+ * Plan settings: config.php defaults overridden by admin-edited rows in the settings
+ * table (keys plan.<plan>.<field>). Fields: name, usd, myr, max_links (0 = unlimited).
+ */
+function plan_cfg(string $plan): array
+{
+    static $cache = [];
+    if (isset($cache[$plan])) {
+        return $cache[$plan];
+    }
+    $p = cfg('plans.' . $plan) ?? ['name' => ucfirst($plan), 'usd' => 0, 'myr' => 0, 'max_links' => 0];
+    foreach (['usd', 'myr', 'max_links'] as $k) {
+        $v = setting('plan.' . $plan . '.' . $k);
+        if ($v !== '' && is_numeric($v)) {
+            $p[$k] = $v + 0;
+        }
+    }
+    return $cache[$plan] = $p;
+}
+
+/** Link allowance for a plan; 0 means unlimited. */
+function plan_max_links(string $plan): int
+{
+    return (int) plan_cfg($plan)['max_links'];
+}
+
+function can_add_link(array $user): bool
+{
+    $max = plan_max_links(user_plan($user));
+    return $max === 0 || count_user_links((int) $user['id']) < $max;
+}
+
 /** Money for a plan in the current domain's currency: "RM39" / "$9". */
 function price(string $plan, ?string $currency = null): string
 {
     $currency = $currency ?? domain_cfg()['currency'];
-    $p = cfg('plans.' . $plan);
-    if (!$p) {
-        return '';
-    }
-    return $currency === 'MYR' ? 'RM' . $p['myr'] : '$' . $p['usd'];
+    $p = plan_cfg($plan);
+    $fmt = fn($n) => fmod((float) $n, 1.0) == 0.0 ? number_format((float) $n, 0) : number_format((float) $n, 2);
+    return $currency === 'MYR' ? 'RM' . $fmt($p['myr']) : '$' . $fmt($p['usd']);
 }
 
 /** Only allow a safe https:// URL. */
