@@ -21,7 +21,7 @@ function page_start(array $o = []): void
     $gsv = (string) cfg('google_site_verification');
     ?>
 <!doctype html>
-<html lang="<?= $l ?>">
+<html lang="<?= $l ?>"<?php $geo = request_country_header(); echo $geo !== '' ? ' data-geo="' . e($geo) . '"' : ''; ?>>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,6 +69,8 @@ function page_start(array $o = []): void
       <a href="/#faq"><?= e(t('nav_faq')) ?></a>
     </nav>
     <div class="nav-actions">
+      <?php $cur = currency(); ?>
+      <a class="lang-switch cur-switch" href="?cur=<?= $cur === 'MYR' ? 'USD' : 'MYR' ?>" title="<?= e(t('cur_switch_title')) ?>"><span class="<?= $cur === 'MYR' ? 'on' : '' ?>">RM</span><span class="<?= $cur === 'USD' ? 'on' : '' ?>">$</span></a>
       <a class="lang-switch" href="?lang=<?= $l === 'en' ? 'ms' : 'en' ?>" title="<?= e(t('footer_lang')) ?>"><?= $l === 'en' ? 'BM' : 'EN' ?></a>
       <?php if ($u): ?>
         <a class="btn btn-ghost" href="/dashboard"><?= e(t('nav_dashboard')) ?></a>
@@ -130,6 +132,7 @@ function page_end(): void
   <div class="wrap footer-bottom">© <?= date('Y') ?> <?= e($site) ?> · Malaysia</div>
 </footer>
 <script src="/assets/js/app.js?v=<?= filemtime(WSAP_ROOT . '/assets/js/app.js') ?>" defer></script>
+<script src="/assets/js/geo.js?v=<?= filemtime(WSAP_ROOT . '/assets/js/geo.js') ?>" defer></script>
 </body>
 </html>
 <?php

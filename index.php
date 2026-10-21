@@ -231,7 +231,7 @@ $products = [
     '@context' => 'https://schema.org',
     '@graph' => [
         ['@type' => 'WebApplication', 'name' => 'WSAP', 'url' => base_url(), 'applicationCategory' => 'BusinessApplication', 'operatingSystem' => 'Web',
-         'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => domain_cfg()['currency']],
+         'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => currency()],
          'description' => t('hero_lead', ['domain' => $domain])],
         ['@type' => 'FAQPage', 'mainEntity' => array_map(fn($i) => ['@type' => 'Question', 'name' => t("faq_{$i}_q"), 'acceptedAnswer' => ['@type' => 'Answer', 'text' => t("faq_{$i}_a")]], range(1, 8))],
     ],

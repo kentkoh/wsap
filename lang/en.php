@@ -1083,4 +1083,6 @@ Name: Marta Ruiz',
     'pr2_4t' => 'Shops',
     'pr2_4d' => 'A catalogue with a cart. Orders arrive itemised in WhatsApp and you confirm payment in the chat.',
     'pr2_learn' => 'Learn more',
+    'cur_switch_title' => 'Show prices in RM or USD',
+    'geo_detected' => 'Country detected automatically. Change it if needed.',
 ];

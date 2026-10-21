@@ -624,3 +624,7 @@ textarea.input { min-height: 96px; resize: vertical; }
 .svg-cursor { animation: nudge 2.4s ease-in-out infinite; transform-origin: center; }
 @keyframes nudge { 0%, 100% { transform: translate(8px, 10px); } 40%, 60% { transform: translate(0, 0) scale(.9); } }
 @media (prefers-reduced-motion: reduce) { .flow-line, .flow-dot, .svg-cursor, .cursor, .site-mock .fab { animation: none !important; } }
+
+/* currency toggle */
+.cur-switch { display: inline-flex; gap: 0; padding: 0; overflow: hidden; }
+.cur-switch span { padding: 6px 8px; } .cur-switch span.on { background: var(--green); color: #fff; }

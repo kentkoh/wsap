@@ -1064,4 +1064,6 @@ Nama: Marta Ruiz',
     'pr2_4t' => 'Kedai',
     'pr2_4d' => 'Katalog dengan troli. Pesanan sampai lengkap di WhatsApp dan anda sahkan bayaran dalam chat.',
     'pr2_learn' => 'Ketahui lebih lanjut',
+    'cur_switch_title' => 'Papar harga dalam RM atau USD',
+    'geo_detected' => 'Negara dikesan secara automatik. Tukar jika perlu.',
 ];

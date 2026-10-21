@@ -4,7 +4,7 @@ require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
 
 $wa = (string) cfg('support_whatsapp');
-$cur = domain_cfg()['currency'];
+$cur = currency();
 $u = current_user();
 require __DIR__ . '/lib/billplz.php';
 $upgradeHref = billplz_enabled()

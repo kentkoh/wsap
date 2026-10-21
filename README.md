@@ -101,7 +101,8 @@ Sections (index.php, graphics in `lib/home_graphics.php`): hero + free generator
 
 ## Product pages & demos
 
-- `/premium-links`, `/whatsapp-forms`, `/whatsapp-shop` — marketing pages. The shop page has six live feature mocks with Read-more modals, a tabbed dashboard tour using real screenshots in `assets/img/shop/*.webp` (regenerate: seed `dev/seed_dev.php`, screenshot with Playwright at 1280×860, convert with sharp), a comparison table and FAQ. Prices on all pages come from `price()` so admin changes apply instantly. Linked from the **Products** dropdown in the header, the homepage product row and the footer.
+- `/premium-links`, `/whatsapp-forms`, `/whatsapp-shop` — marketing pages. The shop page has six live feature mocks with Read-more modals, a tabbed dashboard tour using real screenshots in `assets/img/shop/*.webp` (regenerate: seed `dev/seed_dev.php`, screenshot with Playwright at 1280×860, convert with sharp), a comparison table and FAQ. Prices on all pages come from `price()` so admin changes apply instantly. Display currency: `currency()` = `?cur=MYR|USD` → cookie `wsap_cur` → domain default (wsap.me USD, wsap.my MYR); the header has an RM / $ toggle. Billplz still charges MYR.
+- Phone country auto-detect: server header (Cloudflare `CF-IPCountry` etc. → `<html data-geo>`), then `assets/js/geo.js`: cached result → timezone → browser locale region → ipapi.co (2 s timeout). Never overrides a picker the user already changed. Linked from the **Products** dropdown in the header, the homepage product row and the footer.
 - **Demo mode** (`forms.demo` / `shops.demo`, upgrade_008; toggle in Admin → Forms/Shops): the last step shows a WhatsApp-styled preview popup of the message instead of opening WhatsApp. Nothing is sent or saved. Seeds: `db/seed_demo_forms.sql` (homestay, clinic, pickleball, workshop, tuition, catering → wsap.me/demo-*), `db/seed_demo_shop.sql` (wsap.me/bakery).
 
 ## Deploy (every update)

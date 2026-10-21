@@ -23,7 +23,7 @@ $buyHandle = (!$link && !$form && !$shop) ? strtolower(trim((string) ($_GET['han
 $handleFee = $buyHandle !== '' ? handle_fee_sen($buyHandle, (int) $u['id']) : 0;
 $err = null;
 $wa = (string) cfg('support_whatsapp');
-$cur = domain_cfg()['currency'];
+$cur = currency();
 $plan = $shop ? 'shop' : ($form ? 'form' : 'premium');
 $years = max(1, min(3, (int) ($_POST['years'] ?? 1)));
 

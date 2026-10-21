@@ -49,15 +49,14 @@ function country_codes(): array
     ];
 }
 
+/** Server-side default for the phone picker; assets/js/geo.js refines it on the client. */
 function default_country(): string
 {
-    return current_domain() === 'wsap.my' || lang() === 'ms' ? 'MY' : (request_country_or('MY'));
-}
-
-function request_country_or(string $fallback): string
-{
-    $c = strtoupper(trim((string) ($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
-    return isset(country_codes()[$c]) ? $c : $fallback;
+    $c = request_country_header();
+    if ($c !== '' && isset(country_codes()[$c])) {
+        return $c;
+    }
+    return 'MY';
 }
 
 /** <option> list for the phone picker. */

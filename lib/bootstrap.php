@@ -341,13 +341,48 @@ function can_add_link(array $user): bool
     return $max === 0 || count_user_links((int) $user['id']) < $max;
 }
 
-/** Money for a plan in the current domain's currency: "RM39" / "$9". */
+/**
+ * Display currency: ?cur=MYR|USD sets a cookie; otherwise the cookie; otherwise the domain default.
+ * (Billplz always charges MYR; this only changes what is shown.)
+ */
+function currency(): string
+{
+    static $cur = null;
+    if ($cur !== null) {
+        return $cur;
+    }
+    $allowed = ['MYR', 'USD'];
+    $q = strtoupper((string) ($_GET['cur'] ?? ''));
+    if (in_array($q, $allowed, true)) {
+        setcookie('wsap_cur', $q, ['expires' => time() + 86400 * 365, 'path' => '/', 'samesite' => 'Lax']);
+        return $cur = $q;
+    }
+    $c = strtoupper((string) ($_COOKIE['wsap_cur'] ?? ''));
+    if (in_array($c, $allowed, true)) {
+        return $cur = $c;
+    }
+    return $cur = domain_cfg()['currency'];
+}
+
+/** Money for a plan in the chosen display currency: "RM39" / "$9". */
 function price(string $plan, ?string $currency = null): string
 {
-    $currency = $currency ?? domain_cfg()['currency'];
+    $currency = $currency ?? currency();
     $p = plan_cfg($plan);
     $fmt = fn($n) => fmod((float) $n, 1.0) == 0.0 ? number_format((float) $n, 0) : number_format((float) $n, 2);
     return $currency === 'MYR' ? 'RM' . $fmt($p['myr']) : '$' . $fmt($p['usd']);
+}
+
+/** Two-letter country from CDN/proxy headers (Cloudflare, LiteSpeed GeoIP), or ''. */
+function request_country_header(): string
+{
+    foreach (['HTTP_CF_IPCOUNTRY', 'GEOIP_COUNTRY_CODE', 'HTTP_X_COUNTRY_CODE', 'HTTP_X_GEOIP_COUNTRY'] as $k) {
+        $v = strtoupper(trim((string) ($_SERVER[$k] ?? '')));
+        if (preg_match('/^[A-Z]{2}$/', $v)) {
+            return $v;
+        }
+    }
+    return '';
 }
 
 /** Only allow a safe https:// URL. */
