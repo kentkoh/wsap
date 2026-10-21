@@ -18,7 +18,8 @@ function http_request(string $url, array $opts = []): array
         $headers[] = 'Authorization: Basic ' . base64_encode($opts['basic_auth']);
     }
 
-    if (function_exists('curl_init')) {
+    // Some hosts load curl but put curl_exec on disable_functions; check the one we actually call.
+    if (function_exists('curl_init') && function_exists('curl_exec')) {
         $ch = curl_init($url);
         $c = [
             CURLOPT_RETURNTRANSFER => true,
