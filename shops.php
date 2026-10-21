@@ -32,10 +32,10 @@ page_start(['title' => t('nav_tab_shops'), 'noindex' => true, 'body_class' => 'p
       <div class="stats"><b><?= number_format((int) $s['views']) ?></b><span><?= e(t('fm_views')) ?></span></div>
       <div class="actions">
         <button class="btn btn-sm btn-ghost" type="button" data-copy="<?= e(shop_url($s)) ?>" data-copied="<?= e(t('res_copied')) ?>"><?= e(t('res_copy')) ?></button>
+        <a class="btn btn-sm btn-primary" href="/store?shop=<?= (int) $s['id'] ?>"><?= e(t('sh_nav_dashboard')) ?> →</a>
         <a class="btn btn-sm btn-ghost" href="/products?shop=<?= (int) $s['id'] ?>"><?= e(t('sh_products')) ?></a>
         <a class="btn btn-sm btn-ghost" href="/orders?shop=<?= (int) $s['id'] ?>"><?= e(t('sh_orders')) ?></a>
-        <a class="btn btn-sm btn-ghost" href="/shop?id=<?= (int) $s['id'] ?>"><?= e(t('sh_settings')) ?></a>
-        <?php if (!$pub): ?><a class="btn btn-sm btn-primary" href="/upgrade?shop=<?= (int) $s['id'] ?>">★ <?= e(t('fm_publish')) ?></a><?php else: ?><a class="btn btn-sm btn-ghost" href="/upgrade?shop=<?= (int) $s['id'] ?>"><?= e(t('dash_extend')) ?></a><?php endif; ?>
+        <?php if (!$pub): ?><a class="btn btn-sm btn-ghost" href="/upgrade?shop=<?= (int) $s['id'] ?>">★ <?= e(t('fm_publish')) ?></a><?php else: ?><a class="btn btn-sm btn-ghost" href="/upgrade?shop=<?= (int) $s['id'] ?>"><?= e(t('dash_extend')) ?></a><?php endif; ?>
       </div>
     </article>
     <?php endforeach; ?>

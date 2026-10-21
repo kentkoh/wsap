@@ -7,6 +7,7 @@ require __DIR__ . '/lib/shops.php';
 require __DIR__ . '/lib/countries.php';
 require __DIR__ . '/lib/ua.php';
 require __DIR__ . '/lib/app_nav.php';
+require __DIR__ . '/lib/shop_nav.php';
 
 $u = require_login();
 $id = (int) ($_GET['id'] ?? ($_POST['id'] ?? 0));
@@ -53,15 +54,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 $shipping[] = ['name' => $sn, 'price' => to_sen((string) ($_POST['ship_price'][$i] ?? '0')), 'note' => mb_substr(trim((string) ($_POST['ship_note'][$i] ?? '')), 0, 120)];
             }
         }
-        $coupons = [];
-        foreach ((array) ($_POST['cp_code'] ?? []) as $i => $cc) {
-            $cc = strtoupper(preg_replace('/[^A-Z0-9-]/', '', strtoupper(trim((string) $cc))) ?? '');
-            if ($cc !== '') {
-                $type = ($_POST['cp_type'][$i] ?? 'percent') === 'fixed' ? 'fixed' : 'percent';
-                $val = $type === 'fixed' ? to_sen((string) ($_POST['cp_value'][$i] ?? '0')) : max(0, min(100, (float) ($_POST['cp_value'][$i] ?? 0)));
-                $coupons[] = ['code' => mb_substr($cc, 0, 30), 'type' => $type, 'value' => $val];
-            }
-        }
+        $coupons = $shop ? shop_coupons($shop) : []; // managed at /coupons
         $logo = $shop['logo'] ?? '';
         $cover = $shop['cover'] ?? '';
         if (!empty($_FILES['logo_file']['name'])) {
@@ -88,19 +81,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'currency' => in_array($_POST['currency'] ?? '', $currencies, true) ? $_POST['currency'] : 'MYR',
             'fields' => json_encode($fields), 'shipping' => json_encode($shipping, JSON_UNESCAPED_UNICODE), 'coupons' => json_encode($coupons, JSON_UNESCAPED_UNICODE),
             'payment_note' => mb_substr(trim((string) ($_POST['payment_note'] ?? '')), 0, 300),
+            'instagram' => safe_url((string) ($_POST['instagram'] ?? '')), 'facebook' => safe_url((string) ($_POST['facebook'] ?? '')), 'tiktok' => safe_url((string) ($_POST['tiktok'] ?? '')),
+            'hours_text' => mb_substr(trim((string) ($_POST['hours_text'] ?? '')), 0, 120),
             'is_open' => isset($_POST['is_open']) ? 1 : 0, 'active' => isset($_POST['active']) ? 1 : 0,
         ];
         if ($shop) {
             $sets = implode(', ', array_map(fn($k) => "$k = ?", array_keys($row)));
             db_exec("UPDATE shops SET $sets, updated_at = ? WHERE id = ?", [...array_values($row), now(), (int) $shop['id']]);
             flash('ok', t('sh_saved'));
-            redirect('/shops');
+            redirect('/store?shop=' . (int) $shop['id']);
         }
         $cols = implode(', ', array_keys($row));
         $marks = implode(', ', array_fill(0, count($row), '?'));
         $newId = db_insert("INSERT INTO shops (user_id, $cols, views, created_at, updated_at) VALUES (?, $marks, 0, ?, ?)", [(int) $u['id'], ...array_values($row), now(), now()]);
         flash('ok', t('sh_saved_first'));
-        redirect('/products?shop=' . $newId);
+        redirect('/categories?shop=' . $newId . '&new=1');
     } catch (InvalidArgumentException $e) {
         $err = $e->getMessage();
     } catch (Throwable $e) {
@@ -125,9 +120,8 @@ page_start(['title' => $shop ? t('sh_settings') : t('sh_new'), 'noindex' => true
 ?>
 <section class="app wrap">
   <?= app_nav('shops') ?>
-  <p><a href="/shops">← <?= e(t('nav_tab_shops')) ?></a></p>
-  <div class="app-head"><h1><?= e($shop ? $shop['name'] : t('sh_new')) ?></h1>
-    <?php if ($shop): ?><a class="btn btn-ghost btn-sm" href="/products?shop=<?= (int) $shop['id'] ?>"><?= e(t('sh_products')) ?></a><a class="btn btn-ghost btn-sm" href="<?= e(shop_url($shop)) ?>?preview=1" target="_blank" rel="noopener" style="margin-left:0"><?= e(t('fm_preview')) ?> ↗</a><?php endif; ?></div>
+  <?php if ($shop): ?><?= shop_nav($shop, 'settings') ?><?php else: ?><p><a href="/shops">← <?= e(t('nav_tab_shops')) ?></a></p><?php endif; ?>
+  <div class="app-head"><h1><?= e($shop ? t('sh_settings') : t('sh_new')) ?></h1></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
 
   <form method="post" enctype="multipart/form-data" novalidate>
@@ -145,6 +139,9 @@ page_start(['title' => $shop ? t('sh_settings') : t('sh_new'), 'noindex' => true
         <div class="field"><label for="logo_file"><?= e(t('sh_f_logo')) ?></label><input class="input" type="file" id="logo_file" name="logo_file" accept="image/*"><?php if (!empty($shop['logo'])): ?><p class="hint"><img src="<?= e($shop['logo']) ?>" alt="" style="height:48px;display:inline-block;vertical-align:middle;border-radius:8px"> <label><input type="checkbox" name="remove_logo"> <?= e(t('sh_remove')) ?></label></p><?php endif; ?></div>
         <div class="field"><label for="cover_file"><?= e(t('sh_f_cover')) ?></label><input class="input" type="file" id="cover_file" name="cover_file" accept="image/*"><?php if (!empty($shop['cover'])): ?><p class="hint"><img src="<?= e($shop['cover']) ?>" alt="" style="height:48px;display:inline-block;vertical-align:middle;border-radius:8px"> <label><input type="checkbox" name="remove_cover"> <?= e(t('sh_remove')) ?></label></p><?php endif; ?></div>
         <div class="field"><label for="accent"><?= e(t('sh_f_accent')) ?></label><input type="color" id="accent" name="accent" value="<?= $v('accent', '#0b3d2e') ?>" style="width:60px;height:36px;border:1px solid var(--line-2);border-radius:8px;padding:2px;background:#fff"></div>
+        <div class="field"><label for="hours_text"><?= e(t('sh_f_hours')) ?> <small><?= e(t('gen_optional')) ?></small></label><input class="input" id="hours_text" name="hours_text" maxlength="120" value="<?= $v('hours_text') ?>" placeholder="<?= e(t('sh_f_hours_ph')) ?>"></div>
+        <div class="field"><span class="label"><?= e(t('sh_f_social')) ?> <small><?= e(t('gen_optional')) ?></small></span>
+          <input class="input" name="instagram" type="url" value="<?= $v('instagram') ?>" placeholder="https://instagram.com/…" style="margin-bottom:6px"><input class="input" name="facebook" type="url" value="<?= $v('facebook') ?>" placeholder="https://facebook.com/…" style="margin-bottom:6px"><input class="input" name="tiktok" type="url" value="<?= $v('tiktok') ?>" placeholder="https://tiktok.com/@…"></div>
         <div class="field"><label class="switch"><input type="checkbox" name="is_open" <?= ($_POST['is_open'] ?? ($shop['is_open'] ?? 1)) ? 'checked' : '' ?>> <?= e(t('sh_f_open')) ?></label><p class="hint"><?= e(t('sh_f_open_hint')) ?></p></div>
         <div class="field"><label class="switch"><input type="checkbox" name="active" <?= ($_POST['active'] ?? ($shop['active'] ?? 1)) ? 'checked' : '' ?>> <?= e(t('link_active')) ?></label></div>
       </div>
@@ -172,18 +169,11 @@ page_start(['title' => $shop ? t('sh_settings') : t('sh_new'), 'noindex' => true
           </div>
         </div>
 
-        <div class="card">
-          <h3 style="margin-bottom:6px"><?= e(t('sh_coupons')) ?></h3>
-          <p class="muted small"><?= e(t('sh_coupons_hint')) ?></p>
-          <?php foreach (array_pad($coupons, 3, ['code' => '', 'type' => 'percent', 'value' => '']) as $i => $c): ?>
-          <div style="display:grid;grid-template-columns:1fr .8fr .6fr;gap:6px;margin-bottom:6px"><input class="input" name="cp_code[]" value="<?= e((string) $c['code']) ?>" placeholder="RAYA10" maxlength="30" style="text-transform:uppercase"><select class="select" name="cp_type[]"><option value="percent" <?= ($c['type'] ?? '') === 'percent' ? 'selected' : '' ?>>% off</option><option value="fixed" <?= ($c['type'] ?? '') === 'fixed' ? 'selected' : '' ?>><?= e(t('sh_cp_fixed')) ?></option></select><input class="input" name="cp_value[]" value="<?= $c['code'] !== '' ? e((string) (($c['type'] ?? '') === 'fixed' ? number_format(((int) $c['value']) / 100, 2, '.', '') : $c['value'])) : '' ?>" placeholder="10" inputmode="decimal"></div>
-          <?php endforeach; ?>
-        </div>
       </div>
     </div>
     <div class="form-actions" style="margin-top:18px">
       <button class="btn btn-primary btn-lg" type="submit"><?= e(t('link_save')) ?></button><a class="btn btn-ghost" href="/shops">←</a>
-      <?php if ($shop): ?><button class="btn btn-sm btn-danger right" type="submit" name="delete" value="1" onclick="return confirm(<?= e(json_encode(t('sh_delete_conf'))) ?>)"><?= e(t('sh_delete')) ?></button><?php endif; ?>
+      <?php if ($shop): ?><a class="btn btn-ghost" href="/coupons?shop=<?= (int) $shop['id'] ?>"><?= e(t('sh_coupons')) ?> →</a><button class="btn btn-sm btn-danger right" type="submit" name="delete" value="1" onclick="return confirm(<?= e(json_encode(t('sh_delete_conf'))) ?>)"><?= e(t('sh_delete')) ?></button><?php endif; ?>
     </div>
   </form>
 </section>

@@ -286,3 +286,80 @@ function store_image(array $file, string $prefix): string
     imagedestroy($im);
     return $out;
 }
+
+// ---------------------------------------------------------------- categories
+
+function shop_categories(int $shopId): array
+{
+    return db_rows('SELECT * FROM categories WHERE shop_id = ? ORDER BY sort, id', [$shopId]);
+}
+
+/** Products grouped by category row (uncategorised last). Each entry: ['category' => row|null, 'products' => [...]]. */
+function shop_catalog(int $shopId, bool $activeOnly = true): array
+{
+    $cats = shop_categories($shopId);
+    $groups = [];
+    foreach ($cats as $c) {
+        $groups[(int) $c['id']] = ['category' => $c, 'products' => []];
+    }
+    $other = ['category' => null, 'products' => []];
+    foreach (shop_products($shopId, $activeOnly) as $p) {
+        $cid = (int) ($p['category_id'] ?? 0);
+        if ($cid && isset($groups[$cid])) {
+            $groups[$cid]['products'][] = $p;
+        } else {
+            $other['products'][] = $p;
+        }
+    }
+    $out = array_values(array_filter($groups, fn($g) => $g['products'] || !$activeOnly));
+    if ($other['products']) {
+        $out[] = $other;
+    }
+    return $out;
+}
+
+/** Orders grouped by customer phone (fallback name). */
+function shop_customers(int $shopId, string $q = ''): array
+{
+    $rows = db_rows('SELECT customer, total, status, created_at FROM orders WHERE shop_id = ? ORDER BY id DESC', [$shopId]);
+    $by = [];
+    foreach ($rows as $r) {
+        $c = json_decode((string) $r['customer'], true) ?: [];
+        $phone = preg_replace('/\D/', '', (string) ($c['phone'] ?? '')) ?? '';
+        $key = $phone !== '' ? $phone : strtolower(trim((string) ($c['name'] ?? '?')));
+        if ($q !== '' && stripos($key . ' ' . ($c['name'] ?? ''), $q) === false) {
+            continue;
+        }
+        if (!isset($by[$key])) {
+            $by[$key] = ['name' => (string) ($c['name'] ?? ''), 'phone' => $phone, 'orders' => 0, 'spent' => 0, 'last' => $r['created_at'], 'city' => (string) ($c['city'] ?? ''), 'address' => (string) ($c['address'] ?? '')];
+        }
+        $by[$key]['orders']++;
+        if ($r['status'] !== 'cancelled') {
+            $by[$key]['spent'] += (int) $r['total'];
+        }
+    }
+    uasort($by, fn($a, $b) => strcmp($b['last'], $a['last']));
+    return $by;
+}
+
+/** Metrics for a window, with the previous window for comparison. */
+function shop_metrics(int $shopId, int $days = 30): array
+{
+    $now = now();
+    $since = now(-$days * 86400);
+    $prevSince = now(-2 * $days * 86400);
+    $cur = db_row('SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS v, COUNT(DISTINCT customer) AS c FROM orders WHERE shop_id = ? AND status <> ? AND created_at >= ?', [$shopId, 'cancelled', $since]);
+    $prev = db_row('SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS v, COUNT(DISTINCT customer) AS c FROM orders WHERE shop_id = ? AND status <> ? AND created_at >= ? AND created_at < ?', [$shopId, 'cancelled', $prevSince, $since]);
+    $pct = fn($a, $b) => $b > 0 ? (int) round(($a - $b) / $b * 100) : ($a > 0 ? 100 : 0);
+    $n = (int) $cur['n'];
+    $pn = (int) $prev['n'];
+    $aov = $n ? (int) round((int) $cur['v'] / $n) : 0;
+    $paov = $pn ? (int) round((int) $prev['v'] / $pn) : 0;
+    return [
+        'value' => (int) $cur['v'], 'value_pct' => $pct((int) $cur['v'], (int) $prev['v']),
+        'orders' => $n, 'orders_pct' => $pct($n, $pn),
+        'aov' => $aov, 'aov_pct' => $pct($aov, $paov),
+        'customers' => (int) $cur['c'], 'customers_pct' => $pct((int) $cur['c'], (int) $prev['c']),
+        'pending' => (int) db_value('SELECT COUNT(*) FROM orders WHERE shop_id = ? AND status = ?', [$shopId, 'pending']),
+    ];
+}

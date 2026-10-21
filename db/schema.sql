@@ -166,6 +166,10 @@ CREATE TABLE IF NOT EXISTS shops (
   logo          VARCHAR(255) NOT NULL DEFAULT '',
   cover         VARCHAR(255) NOT NULL DEFAULT '',
   accent        CHAR(7)      NOT NULL DEFAULT '#0b3d2e',
+  instagram     VARCHAR(255) NOT NULL DEFAULT '',
+  facebook      VARCHAR(255) NOT NULL DEFAULT '',
+  tiktok        VARCHAR(255) NOT NULL DEFAULT '',
+  hours_text    VARCHAR(120) NOT NULL DEFAULT '',
   phone         VARCHAR(16)  NOT NULL,
   currency      CHAR(3)      NOT NULL DEFAULT 'MYR',
   fields        TEXT         NOT NULL,          -- JSON {name:"req", phone:"req", address:"on", city:"off", notes:"on"}
@@ -189,7 +193,8 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT         NOT NULL,
   price       INT UNSIGNED NOT NULL DEFAULT 0,  -- sen
   image       VARCHAR(255) NOT NULL DEFAULT '',
-  category    VARCHAR(60)  NOT NULL DEFAULT '',
+  category    VARCHAR(60)  NOT NULL DEFAULT '',   -- legacy free text; category_id wins
+  category_id INT UNSIGNED NULL,
   variants    TEXT         NOT NULL,            -- JSON [{name:"Size", required:true, multi:false, options:[{label, extra(sen)}]}]
   active      TINYINT(1)   NOT NULL DEFAULT 1,
   sort        SMALLINT UNSIGNED NOT NULL DEFAULT 0,
@@ -214,4 +219,16 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at  DATETIME     NOT NULL,
   INDEX idx_orders_shop (shop_id, created_at),
   CONSTRAINT fk_orders_shop FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS categories (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  shop_id     INT UNSIGNED NOT NULL,
+  name        VARCHAR(60)  NOT NULL,
+  description VARCHAR(160) NOT NULL DEFAULT '',
+  image       VARCHAR(255) NOT NULL DEFAULT '',
+  sort        SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at  DATETIME     NOT NULL,
+  INDEX idx_cat_shop (shop_id),
+  CONSTRAINT fk_cat_shop FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

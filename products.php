@@ -5,14 +5,13 @@ require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/shops.php';
 require __DIR__ . '/lib/app_nav.php';
+require __DIR__ . '/lib/shop_nav.php';
 
 $u = require_login();
-$sid = (int) ($_GET['shop'] ?? ($_POST['shop'] ?? 0));
-$shop = db_row('SELECT * FROM shops WHERE id = ? AND user_id = ?', [$sid, (int) $u['id']]);
-if (!$shop) {
-    http_response_code(404);
-    exit('Not found');
-}
+$shop = require_shop($u);
+$sid = (int) $shop['id'];
+$cats = shop_categories($sid);
+$catIds = array_map(fn($c) => (int) $c['id'], $cats);
 $err = null;
 $editing = null;
 
@@ -60,7 +59,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $row = [
                 'name' => $name, 'description' => mb_substr(trim((string) ($_POST['description'] ?? '')), 0, 1000),
                 'price' => to_sen((string) ($_POST['price'] ?? '0')), 'image' => $image,
-                'category' => mb_substr(trim((string) ($_POST['category'] ?? '')), 0, 60),
+                'category_id' => in_array((int) ($_POST['category_id'] ?? 0), $catIds, true) ? (int) $_POST['category_id'] : null,
                 'variants' => json_encode(parse_variants((string) ($_POST['variants'] ?? '')), JSON_UNESCAPED_UNICODE),
                 'active' => isset($_POST['active']) ? 1 : 0,
             ];
@@ -97,14 +96,13 @@ if (!$editing && isset($_GET['edit'])) {
 }
 $showForm = $editing !== null || isset($_GET['new']) || !$products;
 $ev = fn(string $k, string $def = '') => e((string) ($editing[$k] ?? $def));
-$cats = array_values(array_unique(array_filter(array_map(fn($p) => $p['category'], $products))));
 
 page_start(['title' => t('sh_products') . ' · ' . $shop['name'], 'noindex' => true, 'body_class' => 'page-app']);
 ?>
 <section class="app wrap">
   <?= app_nav('shops') ?>
-  <p><a href="/shops">← <?= e(t('nav_tab_shops')) ?></a> · <a href="/shop?id=<?= $sid ?>"><?= e(t('sh_settings')) ?></a> · <a href="/orders?shop=<?= $sid ?>"><?= e(t('sh_orders')) ?></a> · <a href="<?= e(shop_url($shop)) ?>?preview=1" target="_blank" rel="noopener"><?= e(t('fm_preview')) ?> ↗</a></p>
-  <div class="app-head"><h1><?= e($shop['name']) ?> <span class="muted" style="font-size:.6em">· <?= e(t('sh_products')) ?></span></h1><a class="btn btn-primary" href="/products?shop=<?= $sid ?>&new=1">+ <?= e(t('sh_p_add')) ?></a></div>
+  <?= shop_nav($shop, 'products') ?>
+  <div class="app-head"><h1><?= e(t('sh_products')) ?></h1><a class="btn btn-primary" href="/products?shop=<?= $sid ?>&new=1">+ <?= e(t('sh_p_add')) ?></a></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
 
   <div class="qr-page" style="align-items:start">
@@ -115,7 +113,7 @@ page_start(['title' => t('sh_products') . ' · ' . $shop['name'], 'noindex' => t
         <article class="link-card" style="grid-template-columns:auto 1fr auto">
           <div style="width:56px;height:56px;border-radius:10px;background:var(--paper-2);overflow:hidden"><?php if ($p['image'] !== ''): ?><img src="<?= e($p['image']) ?>" alt="" style="width:100%;height:100%;object-fit:cover"><?php endif; ?></div>
           <div><div class="code" style="font-family:var(--sans);font-size:16px"><?= e($p['name']) ?> <?= (int) $p['active'] ? '' : '<span class="badge badge-off">' . e(t('sh_hidden')) . '</span>' ?></div>
-            <div class="sub"><b><?= e(money((int) $p['price'], $shop['currency'])) ?></b><?php if ($p['category'] !== ''): ?><span><?= e($p['category']) ?></span><?php endif; ?><?php if (product_variants($p)): ?><span><?= count(product_variants($p)) ?> <?= e(t('sh_variants')) ?></span><?php endif; ?></div></div>
+            <div class="sub"><b><?= e(money((int) $p['price'], $shop['currency'])) ?></b><?php $cn = ''; foreach ($cats as $c) { if ((int) $c['id'] === (int) ($p['category_id'] ?? 0)) { $cn = $c['name']; } } if ($cn !== ''): ?><span><?= e($cn) ?></span><?php endif; ?><?php if (product_variants($p)): ?><span><?= count(product_variants($p)) ?> <?= e(t('sh_variants')) ?></span><?php endif; ?></div></div>
           <div class="actions" style="grid-column:auto;justify-content:flex-end">
             <a class="btn btn-sm btn-ghost" href="/products?shop=<?= $sid ?>&edit=<?= (int) $p['id'] ?>"><?= e(t('dash_edit')) ?></a>
             <form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="shop" value="<?= $sid ?>"><input type="hidden" name="pid" value="<?= (int) $p['id'] ?>"><button class="btn btn-sm btn-ghost" name="act" value="toggle"><?= (int) $p['active'] ? e(t('sh_hide')) : e(t('sh_show')) ?></button> <button class="btn btn-sm btn-ghost" name="act" value="move" onclick="this.form.dir.value='up'" <?= $i === 0 ? 'disabled' : '' ?>>↑</button><button class="btn btn-sm btn-ghost" name="act" value="move" onclick="this.form.dir.value='down'" <?= $i === count($products) - 1 ? 'disabled' : '' ?>>↓</button><input type="hidden" name="dir" value="down"></form>
@@ -134,7 +132,7 @@ page_start(['title' => t('sh_products') . ' · ' . $shop['name'], 'noindex' => t
       <div class="field"><label for="pname"><?= e(t('sh_p_name')) ?></label><input class="input" id="pname" name="name" maxlength="100" value="<?= $ev('name') ?>" required></div>
       <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label for="price"><?= e(t('sh_p_price')) ?> (<?= e($shop['currency']) ?>)</label><input class="input" id="price" name="price" inputmode="decimal" value="<?= $ev('price') ?>" placeholder="0.00"></div>
-        <div><label for="category"><?= e(t('sh_p_category')) ?></label><input class="input" id="category" name="category" list="cats" maxlength="60" value="<?= $ev('category') ?>" placeholder="<?= e(t('sh_p_category_ph')) ?>"><datalist id="cats"><?php foreach ($cats as $c): ?><option value="<?= e($c) ?>"><?php endforeach; ?></datalist></div>
+        <div><label for="category_id"><?= e(t('sh_p_category')) ?></label><select class="select" id="category_id" name="category_id"><option value="0">—</option><?php foreach ($cats as $c): ?><option value="<?= (int) $c['id'] ?>" <?= (int) ($editing['category_id'] ?? 0) === (int) $c['id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option><?php endforeach; ?></select><?php if (!$cats): ?><p class="hint"><a href="/categories?shop=<?= $sid ?>&new=1"><?= e(t('sh_c_add')) ?> →</a></p><?php endif; ?></div>
       </div>
       <div class="field"><label for="description"><?= e(t('sh_p_desc')) ?> <small><?= e(t('gen_optional')) ?></small></label><textarea class="input" id="description" name="description" maxlength="1000" style="min-height:70px"><?= $ev('description') ?></textarea></div>
       <div class="field"><label for="image_file"><?= e(t('sh_p_image')) ?></label><input class="input" type="file" id="image_file" name="image_file" accept="image/*"><p class="hint"><?= e(t('sh_p_image_hint')) ?></p>
