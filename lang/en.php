@@ -643,4 +643,7 @@ Toppings*: Cheese (+1), Egg (+1.50)',
     'sh_contact' => 'Contact on WhatsApp',
     'sh_rights' => 'All rights reserved.',
     'sh_choose_one' => 'Choose an option for',
+    'err_code_premium' => '"{handle}" is a premium handle, available for a one-time fee of {price} on top of the yearly plan.',
+    'err_code_premium_wa' => 'WhatsApp us to buy it',
+    'admin_premium' => 'Premium handles',
 ];

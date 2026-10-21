@@ -78,8 +78,8 @@ function valid_custom_code(string $code): bool
     return custom_code_error($code) === '';
 }
 
-/** Translation key explaining why a handle is rejected, or '' when valid. */
-function custom_code_error(string $code): string
+/** Translation key explaining why a handle is rejected, or '' when valid. $userId: who wants it (premium handles). */
+function custom_code_error(string $code, ?int $userId = null): string
 {
     require_once WSAP_ROOT . '/lib/blocklist.php';
     if (!preg_match('/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/', $code) || strlen($code) < slug_min_length()) {
@@ -88,16 +88,37 @@ function custom_code_error(string $code): string
     if (in_array($code, RESERVED_CODES, true)) {
         return 'err_code_taken';
     }
-    return slug_block_reason($code);
+    $r = slug_block_reason($code);
+    if ($r !== '') {
+        return $r;
+    }
+    if ($userId === null) {
+        $u = current_user();
+        $userId = $u ? (int) $u['id'] : null;
+    }
+    return premium_slug_block($code, $userId) ? 'err_code_premium' : '';
 }
 
 /** Throws InvalidArgumentException with the right message when a handle is not allowed. */
-function assert_custom_code(string $code): void
+function assert_custom_code(string $code, ?int $userId = null): void
 {
-    $err = custom_code_error($code);
-    if ($err !== '') {
-        throw new InvalidArgumentException(t($err, ['n' => slug_min_length()]));
+    $err = custom_code_error($code, $userId);
+    if ($err === '') {
+        return;
     }
+    $vars = ['n' => slug_min_length()];
+    if ($err === 'err_code_premium') {
+        $row = premium_slug_block($code, $userId);
+        $wa = (string) cfg('support_whatsapp');
+        $vars['price'] = 'RM' . number_format((float) ($row['price_myr'] ?? 0), 0);
+        $vars['handle'] = $code;
+        $msg = t($err, $vars);
+        if ($wa !== '') {
+            $msg .= ' ' . t('err_code_premium_wa') . ': wa.me/' . $wa;
+        }
+        throw new InvalidArgumentException($msg);
+    }
+    throw new InvalidArgumentException(t($err, $vars));
 }
 
 /** Digits only, 7–15 digits (E.164 without "+"). */

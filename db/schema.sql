@@ -232,3 +232,12 @@ CREATE TABLE IF NOT EXISTS categories (
   INDEX idx_cat_shop (shop_id),
   CONSTRAINT fk_cat_shop FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS premium_slugs (
+  slug             VARCHAR(30)  NOT NULL PRIMARY KEY,
+  price_myr        INT UNSIGNED NOT NULL DEFAULT 299,
+  assigned_user_id INT UNSIGNED NULL,
+  note             VARCHAR(120) NOT NULL DEFAULT '',
+  created_at       DATETIME     NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- seed of generic words: db/upgrade_007_premium_slugs.sql

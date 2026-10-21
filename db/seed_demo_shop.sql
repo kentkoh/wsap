@@ -53,4 +53,7 @@ SELECT @sid, 'Caffè Latte', 'Double shot with silky steamed milk.', 900, 'https
 INSERT INTO products (shop_id, name, description, price, image, category, category_id, variants, active, sort, created_at)
 SELECT @sid, 'Fresh Orange Juice', 'Squeezed to order. No sugar added.', 850, 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&q=80&auto=format&fit=crop', '', @c_drink, '[]', 1, 7, NOW() WHERE @exists = 0;
 
+-- the demo uses the premium word 'bakery': assign it to the owner so it stays editable
+UPDATE premium_slugs SET assigned_user_id = @uid WHERE slug = 'bakery';
+
 SELECT CONCAT('Demo shop ready: https://wsap.me/bakery (owner user #', @uid, ')') AS result;

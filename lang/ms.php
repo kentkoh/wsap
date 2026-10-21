@@ -624,4 +624,7 @@ Topping*: Keju (+1), Telur (+1.50)',
     'sh_contact' => 'Hubungi di WhatsApp',
     'sh_rights' => 'Hak cipta terpelihara.',
     'sh_choose_one' => 'Pilih satu untuk',
+    'err_code_premium' => '"{handle}" ialah handle premium, tersedia dengan yuran sekali {price} di samping pelan tahunan.',
+    'err_code_premium_wa' => 'WhatsApp kami untuk membelinya',
+    'admin_premium' => 'Handle premium',
 ];

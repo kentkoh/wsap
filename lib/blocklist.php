@@ -73,6 +73,26 @@ function slug_block_reason(string $slug): string
     return '';
 }
 
+/**
+ * Premium handles: generic words sold separately. Returns the row when $slug is premium and
+ * NOT assigned to $userId (so the caller must refuse it), or null when it may be used.
+ */
+function premium_slug_block(string $slug, ?int $userId): ?array
+{
+    try {
+        $row = db_row('SELECT * FROM premium_slugs WHERE slug = ?', [strtolower($slug)]);
+    } catch (Throwable $e) {
+        return null; // table not installed yet
+    }
+    if (!$row) {
+        return null;
+    }
+    if ($userId !== null && (int) ($row['assigned_user_id'] ?? 0) === $userId) {
+        return null;
+    }
+    return $row;
+}
+
 function slug_min_length(): int
 {
     $n = (int) (setting('slug_min') ?: cfg('slug_min'));

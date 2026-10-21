@@ -91,7 +91,9 @@ Smart Links: destinations with rules (always/weighted, business hours + timezone
 
 Shops: categories, photos (uploaded to `assets/uploads`, re-encoded to WebP, PHP execution blocked), option groups with price extras (`Size: S, M, L (+2)`; `*` = multi-select), delivery methods, coupons, configurable checkout fields, open/closed switch, orders with statuses + 30-day metrics + CSV. Payment is arranged in WhatsApp (same as walink).
 
-Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`, `db/upgrade_005_shops.sql`, `db/upgrade_006_shop_categories.sql`.
+Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`, `db/upgrade_005_shops.sql`, `db/upgrade_006_shop_categories.sql`, `db/upgrade_007_premium_slugs.sql` (seeds ~200 generic words as premium handles).
+
+Handle policy (`lib/blocklist.php`): min length (admin), reserved words, trademarks, EN/BM profanity, admin extra words, and **premium handles** (`premium_slugs` table: generic words sold for a one-time fee; refused unless assigned to the account in Admin → Premium handles).
 
 ## Deploy (every update)
 

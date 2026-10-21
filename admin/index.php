@@ -41,6 +41,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $min = (int) ($_POST['slug_min'] ?? 4);
             set_setting('slug_min', (string) max(3, min(10, $min)));
             flash('ok', 'Settings saved.');
+        } elseif ($act === 'ps_add') {
+            $price = max(0, (int) ($_POST['price'] ?? 299));
+            $n = 0;
+            foreach (preg_split('/[\s,]+/', strtolower((string) ($_POST['slugs'] ?? ''))) ?: [] as $w) {
+                $w = trim($w);
+                if ($w === '' || !preg_match('/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/', $w)) {
+                    continue;
+                }
+                if (!db_value('SELECT 1 FROM premium_slugs WHERE slug = ?', [$w])) {
+                    db_exec('INSERT INTO premium_slugs (slug, price_myr, created_at) VALUES (?, ?, ?)', [$w, $price, now()]);
+                    $n++;
+                }
+            }
+            flash('ok', "$n premium handle(s) added.");
+        } elseif ($act === 'ps_update') {
+            $slug = strtolower((string) ($_POST['slug'] ?? ''));
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+            $uid = null;
+            if ($email !== '') {
+                $uid = db_value('SELECT id FROM users WHERE email = ?', [$email]);
+                if (!$uid) {
+                    throw new InvalidArgumentException("No account with email $email");
+                }
+            }
+            db_exec('UPDATE premium_slugs SET price_myr = ?, assigned_user_id = ?, note = ? WHERE slug = ?',
+                [max(0, (int) ($_POST['price'] ?? 0)), $uid ? (int) $uid : null, mb_substr(trim((string) ($_POST['note'] ?? '')), 0, 120), $slug]);
+            flash('ok', $uid ? "$slug assigned to $email. They can now create a link, form or shop with it." : "$slug updated.");
+        } elseif ($act === 'ps_delete') {
+            db_exec('DELETE FROM premium_slugs WHERE slug = ?', [strtolower((string) ($_POST['slug'] ?? ''))]);
+            flash('ok', 'Premium handle removed (now a normal handle).');
         } elseif ($act === 'item_toggle') {
             $table = in_array($_POST['table'] ?? '', ['forms', 'shops'], true) ? $_POST['table'] : 'forms';
             db_exec("UPDATE $table SET active = 1 - active WHERE id = ?", [(int) $_POST['iid']]);
@@ -87,7 +117,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
     <?php endforeach; ?>
   </div>
   <div class="tabs">
-    <?php foreach (['users' => 'Users', 'links' => 'Links', 'forms' => 'Forms', 'shops' => 'Shops', 'payments' => 'Payments', 'settings' => 'Settings'] as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="?tab=<?= $k ?>"><?= $l ?></a><?php endforeach; ?>
+    <?php foreach (['users' => 'Users', 'links' => 'Links', 'forms' => 'Forms', 'shops' => 'Shops', 'payments' => 'Payments', 'handles' => 'Premium handles', 'settings' => 'Settings'] as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="?tab=<?= $k ?>"><?= $l ?></a><?php endforeach; ?>
     <form method="get" style="margin-left:auto;display:flex;gap:6px"><input type="hidden" name="tab" value="<?= e($tab) ?>"><input class="input" name="q" value="<?= e($q) ?>" placeholder="Search email / code / phone" style="padding:8px 12px;font-size:14px;width:260px"><button class="btn btn-sm btn-ghost">Search</button></form>
   </div>
 
@@ -139,6 +169,33 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
     </tr>
     <?php endforeach; ?>
   </table></div>
+
+  <?php elseif ($tab === 'handles'): ?>
+  <?php $ps = db_rows('SELECT p.*, u.email FROM premium_slugs p LEFT JOIN users u ON u.id = p.assigned_user_id ' . ($q !== '' ? 'WHERE p.slug LIKE ? OR u.email LIKE ? ' : '') . 'ORDER BY p.assigned_user_id IS NULL, p.slug LIMIT 500', $q !== '' ? ["%$q%", "%$q%"] : []);
+        $sold = (int) db_value('SELECT COUNT(*) FROM premium_slugs WHERE assigned_user_id IS NOT NULL'); ?>
+  <div class="qr-page" style="align-items:start">
+    <div>
+      <p class="muted small"><?= count($ps) ?> handles · <?= $sold ?> assigned. A premium handle is refused for everyone except the account it is assigned to. Sell it (one-time fee), then assign it here by email; the buyer still pays the normal yearly plan for the link, form or shop.</p>
+      <div class="table-wrap"><table class="table">
+        <tr><th>Handle</th><th>Fee (RM)</th><th>Assigned to (email)</th><th>Note</th><th></th></tr>
+        <?php foreach ($ps as $r): ?>
+        <tr><form method="post"><?= csrf_field() ?><input type="hidden" name="act" value="ps_update"><input type="hidden" name="slug" value="<?= e($r['slug']) ?>">
+          <td class="mono"><b><?= e($r['slug']) ?></b></td>
+          <td><input class="input" name="price" type="number" min="0" value="<?= (int) $r['price_myr'] ?>" style="width:90px"></td>
+          <td><input class="input" name="email" type="email" value="<?= e((string) ($r['email'] ?? '')) ?>" placeholder="— available —" style="width:220px"></td>
+          <td><input class="input" name="note" value="<?= e($r['note']) ?>" style="width:160px"></td>
+          <td style="white-space:nowrap"><button class="btn btn-sm btn-ghost">Save</button> <button class="btn btn-sm btn-danger" name="act" value="ps_delete" onclick="return confirm('Remove <?= e($r['slug']) ?> from premium handles?')">✕</button></td>
+        </form></tr>
+        <?php endforeach; ?>
+      </table></div>
+    </div>
+    <form method="post" class="card"><?= csrf_field() ?><input type="hidden" name="act" value="ps_add">
+      <h3 style="margin-bottom:10px">Add premium handles</h3>
+      <div class="field"><label for="slugs">Words (one per line or comma-separated)</label><textarea class="input mono" id="slugs" name="slugs" style="min-height:140px;font-size:13.5px" placeholder="bakery&#10;clinic&#10;petshop"></textarea></div>
+      <div class="field"><label for="ps_price">One-time fee (RM)</label><input class="input" id="ps_price" name="price" type="number" min="0" value="299" style="width:140px"></div>
+      <button class="btn btn-primary">Add</button>
+    </form>
+  </div>
 
   <?php elseif ($tab === 'payments'): ?>
   <?php $pays = db_rows('SELECT p.*, u.email, l.code, l.domain FROM payments p JOIN users u ON u.id = p.user_id LEFT JOIN links l ON l.id = p.link_id ' . ($q !== '' ? 'WHERE u.email LIKE ? OR p.bill_id LIKE ? OR l.code LIKE ? ' : '') . 'ORDER BY p.id DESC LIMIT 200', $q !== '' ? ["%$q%", "%$q%", "%$q%"] : []);

@@ -29,7 +29,7 @@ function start_premium_checkout(array $user, array $link, string $handle = '', i
 {
     $handle = strtolower(trim($handle));
     if ($handle !== '' && !(int) $link['is_custom']) {
-        assert_custom_code($handle);
+        assert_custom_code($handle, (int) $user['id']);
         if ($handle !== $link['code'] && slug_taken($handle)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
@@ -98,7 +98,7 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
             $until = extend_until($link['premium_until'] ?? null, (int) $p['years']);
             $code = $link['code'];
             $custom = (int) $link['is_custom'];
-            if ($p['handle'] !== '' && !$custom && valid_custom_code($p['handle'])
+            if ($p['handle'] !== '' && !$custom && custom_code_error($p['handle'], (int) $p['user_id']) === ''
                 && !slug_taken($p['handle'], ['links', $itemId])) {
                 $code = $p['handle'];
                 $custom = 1;
