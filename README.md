@@ -97,7 +97,7 @@ Handle policy (`lib/blocklist.php`): min length (admin), reserved words, tradema
 
 ## Product pages & demos
 
-- `/premium-links`, `/whatsapp-forms`, `/whatsapp-shop` — marketing pages (CSS phone mockups, no images). Linked from the **Products** dropdown in the header, the homepage product row and the footer.
+- `/premium-links`, `/whatsapp-forms`, `/whatsapp-shop` — marketing pages. The shop page has six live feature mocks with Read-more modals, a tabbed dashboard tour using real screenshots in `assets/img/shop/*.webp` (regenerate: seed `dev/seed_dev.php`, screenshot with Playwright at 1280×860, convert with sharp), a comparison table and FAQ. Prices on all pages come from `price()` so admin changes apply instantly. Linked from the **Products** dropdown in the header, the homepage product row and the footer.
 - **Demo mode** (`forms.demo` / `shops.demo`, upgrade_008; toggle in Admin → Forms/Shops): the last step shows a WhatsApp-styled preview popup of the message instead of opening WhatsApp. Nothing is sent or saved. Seeds: `db/seed_demo_forms.sql` (homestay, clinic, pickleball, workshop, tuition, catering → wsap.me/demo-*), `db/seed_demo_shop.sql` (wsap.me/bakery).
 
 ## Deploy (every update)
