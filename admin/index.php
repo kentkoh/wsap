@@ -35,10 +35,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $r = sync_bill((string) ($_POST['bill'] ?? ''));
             flash('ok', $r ? 'Payment confirmed and link upgraded.' : 'Still not paid according to Billplz.');
         } elseif ($act === 'setting') {
-            foreach (['announcement'] as $k) {
+            foreach (['announcement', 'blocked_words'] as $k) {
                 set_setting($k, trim((string) ($_POST[$k] ?? '')));
             }
+            $min = (int) ($_POST['slug_min'] ?? 4);
+            set_setting('slug_min', (string) max(3, min(10, $min)));
             flash('ok', 'Settings saved.');
+        } elseif ($act === 'item_toggle') {
+            $table = in_array($_POST['table'] ?? '', ['forms', 'shops'], true) ? $_POST['table'] : 'forms';
+            db_exec("UPDATE $table SET active = 1 - active WHERE id = ?", [(int) $_POST['iid']]);
+            flash('ok', 'Updated.');
+        } elseif ($act === 'item_delete') {
+            $table = in_array($_POST['table'] ?? '', ['forms', 'shops'], true) ? $_POST['table'] : 'forms';
+            db_exec("DELETE FROM $table WHERE id = ?", [(int) $_POST['iid']]);
+            flash('ok', 'Deleted.');
         } elseif ($act === 'pricing') {
             foreach ($plans as $p) {
                 foreach (['usd', 'myr', 'max_links'] as $k) {
@@ -77,7 +87,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
     <?php endforeach; ?>
   </div>
   <div class="tabs">
-    <?php foreach (['users' => 'Users', 'links' => 'Links', 'payments' => 'Payments', 'settings' => 'Settings'] as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="?tab=<?= $k ?>"><?= $l ?></a><?php endforeach; ?>
+    <?php foreach (['users' => 'Users', 'links' => 'Links', 'forms' => 'Forms', 'shops' => 'Shops', 'payments' => 'Payments', 'settings' => 'Settings'] as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="?tab=<?= $k ?>"><?= $l ?></a><?php endforeach; ?>
     <form method="get" style="margin-left:auto;display:flex;gap:6px"><input type="hidden" name="tab" value="<?= e($tab) ?>"><input class="input" name="q" value="<?= e($q) ?>" placeholder="Search email / code / phone" style="padding:8px 12px;font-size:14px;width:260px"><button class="btn btn-sm btn-ghost">Search</button></form>
   </div>
 
@@ -111,6 +121,21 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
       <td class="small"><?= $r['email'] ? e($r['email']) : '<i>anonymous</i>' ?></td><td><?= (int) $r['clicks'] ?></td><td class="small"><?= e(substr((string) $r['created_at'], 0, 10)) ?></td>
       <td style="white-space:nowrap"><form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="link_toggle"><input type="hidden" name="lid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-ghost"><?= (int) $r['active'] ? 'Pause' : 'Resume' ?></button></form>
         <form method="post" style="display:inline" data-confirm="Delete link <?= e($r['code']) ?>?"><?= csrf_field() ?><input type="hidden" name="act" value="link_delete"><input type="hidden" name="lid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-danger">Delete</button></form></td>
+    </tr>
+    <?php endforeach; ?>
+  </table></div>
+
+  <?php elseif ($tab === 'forms' || $tab === 'shops'): $tbl = $tab; $label = $tab === 'forms' ? 'title' : 'name'; ?>
+  <?php $items = db_rows("SELECT i.*, u.email FROM $tbl i JOIN users u ON u.id = i.user_id " . ($q !== '' ? "WHERE i.slug LIKE ? OR i.$label LIKE ? OR u.email LIKE ? " : '') . 'ORDER BY i.id DESC LIMIT 200', $q !== '' ? ["%$q%", "%$q%", "%$q%"] : []); ?>
+  <div class="table-wrap"><table class="table">
+    <tr><th>#</th><th>Address</th><th>Name</th><th>Owner</th><th>Phone</th><th>Published until</th><th>Created</th><th></th></tr>
+    <?php foreach ($items as $r): ?>
+    <tr>
+      <td><?= (int) $r['id'] ?></td><td class="mono"><a href="https://<?= e($r['domain'] . '/' . $r['slug']) ?>" target="_blank" rel="noopener"><?= e($r['domain'] . '/' . $r['slug']) ?></a> <?= (int) $r['active'] ? '' : '<span class="badge badge-off">off</span>' ?></td>
+      <td><?= e((string) $r[$label]) ?></td><td class="small"><?= e($r['email']) ?></td><td>+<?= e($r['phone']) ?></td>
+      <td class="small"><?= e(substr((string) ($r['premium_until'] ?? ''), 0, 10)) ?: '<i>draft</i>' ?></td><td class="small"><?= e(substr((string) $r['created_at'], 0, 10)) ?></td>
+      <td style="white-space:nowrap"><form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="item_toggle"><input type="hidden" name="table" value="<?= $tbl ?>"><input type="hidden" name="iid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-ghost"><?= (int) $r['active'] ? 'Disable' : 'Enable' ?></button></form>
+        <form method="post" style="display:inline" data-confirm="Delete <?= e($r['slug']) ?> and all its data?"><?= csrf_field() ?><input type="hidden" name="act" value="item_delete"><input type="hidden" name="table" value="<?= $tbl ?>"><input type="hidden" name="iid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-danger">Delete</button></form></td>
     </tr>
     <?php endforeach; ?>
   </table></div>
@@ -150,6 +175,10 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
   </form>
   <form method="post" class="card form-narrow" style="margin-top:18px"><?= csrf_field() ?><input type="hidden" name="act" value="setting">
     <div class="field"><label for="announcement">Announcement bar (empty = hidden)</label><input class="input" id="announcement" name="announcement" value="<?= e(setting('announcement')) ?>"></div>
+    <h3 style="margin:18px 0 6px"><?= e(t('admin_handles')) ?></h3>
+    <div class="field"><label for="slug_min"><?= e(t('admin_slug_min')) ?></label><input class="input" id="slug_min" name="slug_min" type="number" min="3" max="10" value="<?= e(setting('slug_min') ?: (string) cfg('slug_min')) ?>" style="width:120px"></div>
+    <div class="field"><label for="blocked_words"><?= e(t('admin_blocked')) ?></label><textarea class="input mono" id="blocked_words" name="blocked_words" style="min-height:120px;font-size:13.5px" placeholder="brandname&#10;*badword"><?= e(setting('blocked_words')) ?></textarea>
+      <p class="hint">Built-in list already covers major brands, banks, government bodies and EN/BM profanity (lib/blocklist.php).</p></div>
     <p class="muted small">Secrets (DB, Brevo, Google, support WhatsApp) live in <code>config.local.php</code> on the server, not here.</p>
     <button class="btn btn-primary">Save</button>
   </form>

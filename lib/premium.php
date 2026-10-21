@@ -29,9 +29,7 @@ function start_premium_checkout(array $user, array $link, string $handle = '', i
 {
     $handle = strtolower(trim($handle));
     if ($handle !== '' && !(int) $link['is_custom']) {
-        if (!valid_custom_code($handle)) {
-            throw new InvalidArgumentException(t('err_code_invalid'));
-        }
+        assert_custom_code($handle);
         if ($handle !== $link['code'] && slug_taken($handle)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }

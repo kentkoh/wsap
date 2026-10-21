@@ -59,9 +59,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $handle = strtolower(trim((string) ($_POST['code'] ?? '')));
         if ($handle !== '') {
             // Validate now so the user gets the error before the link exists.
-            if (!valid_custom_code($handle)) {
-                throw new InvalidArgumentException(t('err_code_invalid'));
-            }
+            assert_custom_code($handle);
             if (slug_taken($handle)) {
                 throw new InvalidArgumentException(t('err_code_taken'));
             }

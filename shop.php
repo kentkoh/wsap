@@ -28,9 +28,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             redirect('/shops');
         }
         $slug = strtolower(trim((string) ($_POST['slug'] ?? '')));
-        if (!valid_custom_code($slug)) {
-            throw new InvalidArgumentException(t('err_code_invalid'));
-        }
+        assert_custom_code($slug);
         if (slug_taken($slug, ['shops', (int) ($shop['id'] ?? 0)])) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }

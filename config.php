@@ -31,6 +31,8 @@ return [
   // Short codes: 6 chars from an alphabet without look-alikes (no 0/o/1/l/i).
   'code_alphabet' => 'abcdefghjkmnpqrstuvwxyz23456789',
   'code_length'   => 6,
+  // Minimum length for custom handles / form / shop addresses (admin can override in Settings).
+  'slug_min'      => 4,
 
   // Plans. Prices are per LINK per YEAR (walink style) in the two display currencies.
   // These are defaults only: admin can change prices and limits at /admin?tab=settings

@@ -69,12 +69,35 @@ function unique_code(): string
     throw new RuntimeException('Could not allocate a code');
 }
 
-/** Custom handle rules: 3–30 chars, a-z 0-9 and hyphen, no leading/trailing hyphen. */
+/**
+ * Custom handle rules: slug_min–30 chars, a-z 0-9 and hyphen, no leading/trailing hyphen,
+ * not reserved, not a trademark, not offensive. Use custom_code_error() for the reason.
+ */
 function valid_custom_code(string $code): bool
 {
-    return (bool) preg_match('/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/', $code)
-        && strlen($code) >= 3
-        && !in_array($code, RESERVED_CODES, true);
+    return custom_code_error($code) === '';
+}
+
+/** Translation key explaining why a handle is rejected, or '' when valid. */
+function custom_code_error(string $code): string
+{
+    require_once WSAP_ROOT . '/lib/blocklist.php';
+    if (!preg_match('/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/', $code) || strlen($code) < slug_min_length()) {
+        return 'err_code_invalid';
+    }
+    if (in_array($code, RESERVED_CODES, true)) {
+        return 'err_code_taken';
+    }
+    return slug_block_reason($code);
+}
+
+/** Throws InvalidArgumentException with the right message when a handle is not allowed. */
+function assert_custom_code(string $code): void
+{
+    $err = custom_code_error($code);
+    if ($err !== '') {
+        throw new InvalidArgumentException(t($err, ['n' => slug_min_length()]));
+    }
 }
 
 /** Digits only, 7–15 digits (E.164 without "+"). */
@@ -126,9 +149,7 @@ function create_link(string $phone, string $message, array $opts = []): array
     $custom = isset($opts['code']) && $opts['code'] !== '';
     if ($custom) {
         $code = strtolower(trim($opts['code']));
-        if (!valid_custom_code($code)) {
-            throw new InvalidArgumentException(t('err_code_invalid'));
-        }
+        assert_custom_code($code);
         if (slug_taken($code)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
