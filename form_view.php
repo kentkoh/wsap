@@ -15,7 +15,7 @@ $preview = $isOwner && isset($_GET['preview']);
 if (!$form || (!form_is_published($form, $owner) && !$preview)) {
     http_response_code(404);
     $site = e((string) cfg('site_name'));
-    echo '<!doctype html><html lang="' . lang() . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e(t('fm_404_t')) . '</title><link rel="stylesheet" href="/assets/css/app.css"></head><body><div class="open-page"><div class="open-card"><h1>' . e(t('fm_404_t')) . '</h1><p>' . e(t('fm_404_d')) . '</p><a class="btn btn-primary" href="/">' . $site . '</a></div></div></body></html>';
+    echo '<!doctype html><html lang="' . lang() . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e(t('fm_404_t')) . '</title><link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/css/app.css"></head><body><div class="open-page"><div class="open-card"><h1>' . e(t('fm_404_t')) . '</h1><p>' . e(t('fm_404_d')) . '</p><a class="btn btn-primary" href="/">' . $site . '</a></div></div></body></html>';
     exit;
 }
 
@@ -68,7 +68,7 @@ $old = fn(string $k) => e((string) ($_POST[$k] ?? ''));
 <meta name="robots" content="noindex">
 <meta property="og:title" content="<?= e($form['title']) ?>"><meta property="og:description" content="<?= e($form['intro']) ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/app.css">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/css/app.css">
 <style>
   :root{--f-bg:<?= $theme['bg'] ?>;--f-text:<?= $theme['text'] ?>;--f-title:<?= $theme['title'] ?>;--f-bar:<?= $theme['bar'] ?>;--f-btn:<?= $theme['button'] ?>}
   body{background:var(--f-bg);color:var(--f-text)}

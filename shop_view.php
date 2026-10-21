@@ -15,7 +15,7 @@ $site = (string) cfg('site_name');
 
 if (!$shop || (!shop_is_published($shop, $owner) && !$preview)) {
     http_response_code(404);
-    echo '<!doctype html><html lang="' . lang() . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e(t('sh_404_t')) . '</title><link rel="stylesheet" href="/assets/css/app.css"></head><body><div class="open-page"><div class="open-card"><h1>' . e(t('sh_404_t')) . '</h1><p>' . e(t('sh_404_d')) . '</p><a class="btn btn-primary" href="/">' . e($site) . '</a></div></div></body></html>';
+    echo '<!doctype html><html lang="' . lang() . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e(t('sh_404_t')) . '</title><link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/css/app.css"></head><body><div class="open-page"><div class="open-card"><h1>' . e(t('sh_404_t')) . '</h1><p>' . e(t('sh_404_d')) . '</p><a class="btn btn-primary" href="/">' . e($site) . '</a></div></div></body></html>';
     exit;
 }
 $info = click_info();
@@ -42,7 +42,7 @@ $catalog = array_map(fn($p) => ['id' => (int) $p['id'], 'name' => $p['name'], 'p
 <meta name="description" content="<?= e($shop['tagline']) ?>">
 <meta property="og:title" content="<?= e($shop['name']) ?>"><meta property="og:description" content="<?= e($shop['tagline']) ?>"><?php if ($shop['cover'] !== ''): ?><meta property="og:image" content="<?= e(str_starts_with($shop['cover'], 'http') ? $shop['cover'] : base_url() . $shop['cover']) ?>"><?php endif; ?>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/app.css">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/css/app.css">
 <style>
   :root{--acc:<?= e($shop['accent']) ?>}
   body{background:#f4f3ee}
