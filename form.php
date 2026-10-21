@@ -95,7 +95,7 @@ page_start(['title' => $form ? t('fm_edit') : t('fm_new'), 'noindex' => true, 'b
   <p><a href="/forms">← <?= e(t('fm_title')) ?></a></p>
   <div class="app-head"><h1><?= e($form ? t('fm_edit') : t('fm_new')) ?></h1>
     <?php if ($form): ?><a class="btn btn-ghost btn-sm" href="<?= e(form_url($form)) ?>?preview=1" target="_blank" rel="noopener"><?= e(t('fm_preview')) ?> ↗</a><?php endif; ?></div>
-  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
+  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
 
   <form method="post" id="form-editor" novalidate>
     <?= csrf_field() ?><?php if ($form): ?><input type="hidden" name="id" value="<?= (int) $form['id'] ?>"><?php endif; ?>

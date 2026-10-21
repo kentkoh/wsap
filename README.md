@@ -93,7 +93,7 @@ Shops: categories, photos (uploaded to `assets/uploads`, re-encoded to WebP, PHP
 
 Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`, `db/upgrade_005_shops.sql`, `db/upgrade_006_shop_categories.sql`, `db/upgrade_007_premium_slugs.sql` (seeds ~200 generic words as premium handles).
 
-Handle policy (`lib/blocklist.php`): min length (admin), reserved words, trademarks, EN/BM profanity, admin extra words, and **premium handles** (`premium_slugs` table: generic words sold for a one-time fee; refused unless assigned to the account in Admin → Premium handles).
+Handle policy (`lib/blocklist.php`): min length (admin), reserved words, trademarks, EN/BM profanity, admin extra words, and **premium handles** (`premium_slugs` table: generic words sold for a one-time fee; refused unless assigned to the account). Buying is automatic: the refusal shows a **Buy this handle** button → `/upgrade?handle=word` → Billplz one-time fee → on payment the word is assigned to the buyer. On the link upgrade page a premium handle simply adds its fee to the yearly bill. Admin → Premium handles can also assign/release manually.
 
 ## Deploy (every update)
 

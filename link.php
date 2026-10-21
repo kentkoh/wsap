@@ -97,7 +97,7 @@ page_start(['title' => $link ? t('link_edit_title') : t('link_new_title'), 'noin
 <section class="app wrap form-narrow">
   <p><a href="/dashboard">← <?= e(t('dash_title')) ?></a></p>
   <div class="app-head"><h1><?= e($link ? t('link_edit_title') : t('link_new_title')) ?></h1></div>
-  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
+  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
   <?php if ($link && !$editable): ?><div class="locked">🔒 <?= e(t('link_free_locked')) ?> <a href="/upgrade?id=<?= (int) $link['id'] ?>"><b><?= e(t('dash_upgrade')) ?> →</b></a></div><?php endif; ?>
 
   <form method="post" class="card" novalidate>

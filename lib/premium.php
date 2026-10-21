@@ -24,19 +24,51 @@ function premium_price_sen(string $plan = 'premium'): int
     return (int) round(((float) plan_cfg($plan)['myr']) * 100);
 }
 
+/** One-time fee (sen) for a premium handle the user does not own yet; 0 when not premium or already theirs. */
+function handle_fee_sen(string $handle, int $userId): int
+{
+    require_once WSAP_ROOT . '/lib/blocklist.php';
+    $row = premium_slug_block($handle, $userId);
+    return $row ? (int) round(((float) $row['price_myr']) * 100) : 0;
+}
+
 /** Start a checkout for a link: creates a pending payment + Billplz bill, returns the bill URL. */
 function start_premium_checkout(array $user, array $link, string $handle = '', int $years = 1): string
 {
     $handle = strtolower(trim($handle));
+    $fee = 0;
     if ($handle !== '' && !(int) $link['is_custom']) {
-        assert_custom_code($handle, (int) $user['id']);
+        $err = custom_code_error($handle, (int) $user['id']);
+        if ($err !== '' && $err !== 'err_code_premium') {
+            assert_custom_code($handle, (int) $user['id']);
+        }
         if ($handle !== $link['code'] && slug_taken($handle)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
+        $fee = handle_fee_sen($handle, (int) $user['id']); // premium word: fee added to this bill
     } else {
         $handle = '';
     }
-    return start_checkout($user, 'link', (int) $link['id'], 'premium', 'WSAP Premium link ' . short_display($link), $years, $handle);
+    $desc = 'WSAP Premium link ' . short_display($link) . ($fee ? ' + handle ' . $handle : '');
+    return start_checkout($user, 'link', (int) $link['id'], 'premium', $desc, $years, $handle, $fee);
+}
+
+/** Buy a premium handle on its own (one-time). It is assigned to the user when paid. */
+function start_handle_checkout(array $user, string $handle): string
+{
+    $handle = strtolower(trim($handle));
+    $err = custom_code_error($handle, (int) $user['id']);
+    if ($err !== '' && $err !== 'err_code_premium') {
+        assert_custom_code($handle, (int) $user['id']);
+    }
+    if (slug_taken($handle)) {
+        throw new InvalidArgumentException(t('err_code_taken'));
+    }
+    $fee = handle_fee_sen($handle, (int) $user['id']);
+    if ($fee <= 0) {
+        throw new InvalidArgumentException(t('up_handle_not_premium'));
+    }
+    return start_checkout($user, 'handle', 0, 'premium', 'WSAP premium handle ' . $handle, 1, $handle, $fee, true);
 }
 
 /** Start a checkout for a form (plan 'form', per form per year). */
@@ -51,21 +83,23 @@ function start_shop_checkout(array $user, array $shop, int $years = 1): string
     return start_checkout($user, 'shop', (int) $shop['id'], 'shop', 'WSAP Shop ' . $shop['domain'] . '/' . $shop['slug'], $years);
 }
 
-/** Generic: pending payment row + Billplz bill. Returns the bill URL. */
-function start_checkout(array $user, string $itemType, int $itemId, string $plan, string $desc, int $years = 1, string $handle = ''): string
+/** Generic: pending payment row + Billplz bill. Returns the bill URL. $extraSen = one-time add-on (premium handle). */
+function start_checkout(array $user, string $itemType, int $itemId, string $plan, string $desc, int $years = 1, string $handle = '', int $extraSen = 0, bool $feeOnly = false): string
 {
     require_once WSAP_ROOT . '/lib/billplz.php';
     $years = max(1, min(3, $years));
-    $amount = premium_price_sen($plan) * $years;
+    $amount = ($feeOnly ? 0 : premium_price_sen($plan) * $years) + $extraSen;
     if ($amount <= 0) {
         throw new RuntimeException('Price not set');
     }
-    $desc .= ' × ' . $years . ' year' . ($years > 1 ? 's' : '');
+    if (!$feeOnly) {
+        $desc .= ' × ' . $years . ' year' . ($years > 1 ? 's' : '');
+    }
     $bill = billplz_create_bill((string) $user['email'], (string) $user['name'], $amount, $desc, $itemType . ':' . $itemId);
     db_insert(
         'INSERT INTO payments (user_id, link_id, item_type, item_id, bill_id, provider, amount, currency, status, handle, years, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [(int) $user['id'], $itemType === 'link' ? $itemId : null, $itemType, $itemId, $bill['id'], 'billplz', $amount, 'MYR', 'pending', $handle, $years, now()]
+        [(int) $user['id'], $itemType === 'link' ? $itemId : null, $itemType, $itemId ?: null, $bill['id'], 'billplz', $amount, 'MYR', 'pending', $handle, $years, now()]
     );
     return $bill['url'];
 }
@@ -92,7 +126,18 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
     $itemId = (int) ($p['item_id'] ?? $p['link_id'] ?? 0);
     $label = '';
     $until = '';
-    if ($type === 'link' && $itemId) {
+    // A paid premium handle (bought alone or with a link) becomes the buyer's.
+    if ($p['handle'] !== '') {
+        try {
+            db_exec('UPDATE premium_slugs SET assigned_user_id = ?, note = ? WHERE slug = ? AND assigned_user_id IS NULL', [(int) $p['user_id'], 'paid bill ' . $billId, $p['handle']]);
+        } catch (Throwable $e) {
+            error_log('assign handle: ' . $e->getMessage());
+        }
+    }
+    if ($type === 'handle') {
+        $label = $p['handle'];
+        $until = now(365 * 86400 * 50);
+    } elseif ($type === 'link' && $itemId) {
         $link = db_row('SELECT * FROM links WHERE id = ?', [$itemId]);
         if ($link) {
             $until = extend_until($link['premium_until'] ?? null, (int) $p['years']);
@@ -126,8 +171,9 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
         require_once WSAP_ROOT . '/lib/mail.php';
         $u = db_row('SELECT * FROM users WHERE id = ?', [(int) $p['user_id']]);
         if ($u && $label !== '') {
+            $bodyKey = $type === 'handle' ? 'mail_receipt_body_handle' : ($type === 'form' || $type === 'shop' ? 'mail_receipt_body_form' : 'mail_receipt_body');
             send_mail((string) $u['email'], (string) $u['name'], t('mail_receipt_subject', ['site' => cfg('site_name')]),
-                mail_template(t('mail_receipt_title'), '<p>' . t($type === 'form' || $type === 'shop' ? 'mail_receipt_body_form' : 'mail_receipt_body', ['link' => $label, 'until' => substr($until, 0, 10), 'amount' => 'RM' . number_format($p['amount'] / 100, 2)]) . '</p>', base_url() . '/dashboard', t('nav_dashboard')));
+                mail_template(t('mail_receipt_title'), '<p>' . t($bodyKey, ['link' => $label, 'until' => substr($until, 0, 10), 'amount' => 'RM' . number_format($p['amount'] / 100, 2)]) . '</p>', base_url() . '/dashboard', t('nav_dashboard')));
         }
     } catch (Throwable $e) {
         error_log('receipt mail: ' . $e->getMessage());

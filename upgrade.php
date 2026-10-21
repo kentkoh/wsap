@@ -10,6 +10,7 @@ require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/billplz.php';
 require __DIR__ . '/lib/forms.php';
 require __DIR__ . '/lib/shops.php';
+require __DIR__ . '/lib/blocklist.php';
 
 $u = require_login();
 $id = (int) ($_GET['id'] ?? ($_POST['id'] ?? 0));
@@ -18,21 +19,24 @@ $link = $id ? db_row('SELECT * FROM links WHERE id = ? AND user_id = ?', [$id, (
 $form = $formId ? db_row('SELECT * FROM forms WHERE id = ? AND user_id = ?', [$formId, (int) $u['id']]) : null;
 $shopId = (int) ($_GET['shop'] ?? ($_POST['shop'] ?? 0));
 $shop = $shopId ? db_row('SELECT * FROM shops WHERE id = ? AND user_id = ?', [$shopId, (int) $u['id']]) : null;
+$buyHandle = (!$link && !$form && !$shop) ? strtolower(trim((string) ($_GET['handle'] ?? ($_POST['buy_handle'] ?? '')))) : '';
+$handleFee = $buyHandle !== '' ? handle_fee_sen($buyHandle, (int) $u['id']) : 0;
 $err = null;
 $wa = (string) cfg('support_whatsapp');
 $cur = domain_cfg()['currency'];
 $plan = $shop ? 'shop' : ($form ? 'form' : 'premium');
 $years = max(1, min(3, (int) ($_POST['years'] ?? 1)));
 
-if (($link || $form || $shop) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+if (($link || $form || $shop || $buyHandle !== '') && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     csrf_check();
     try {
         if (!billplz_enabled()) {
             throw new RuntimeException(t('up_offline'));
         }
-        $url = $shop ? start_shop_checkout($u, $shop, $years)
+        $url = $buyHandle !== '' ? start_handle_checkout($u, $buyHandle)
+            : ($shop ? start_shop_checkout($u, $shop, $years)
             : ($form ? start_form_checkout($u, $form, $years)
-            : start_premium_checkout($u, $link, (string) ($_POST['handle'] ?? ''), $years));
+            : start_premium_checkout($u, $link, (string) ($_POST['handle'] ?? ''), $years)));
         redirect($url);
     } catch (InvalidArgumentException | RuntimeException $e) {
         $err = $e->getMessage();
@@ -46,14 +50,28 @@ $priceSen = premium_price_sen($plan);
 $rm = fn(int $y) => 'RM' . rtrim(rtrim(number_format($priceSen * $y / 100, 2), '0'), '.');
 $waText = 'Hi WSAP, I want to upgrade ' . ($shop ? shop_display($shop) : ($form ? $form['domain'] . '/' . $form['slug'] : ($link ? short_display($link) : 'a link'))) . '. Account: ' . $u['email'];
 
-page_start(['title' => ($form || $shop) ? t('fm_publish') : t('up_title'), 'noindex' => true, 'body_class' => 'page-app']);
+page_start(['title' => $buyHandle !== '' ? t('up_handle_title') : (($form || $shop) ? t('fm_publish') : t('up_title')), 'noindex' => true, 'body_class' => 'page-app']);
 ?>
 <section class="app wrap form-narrow">
   <p><a href="<?= $shop ? '/shops' : ($form ? '/forms' : '/dashboard') ?>">← <?= e($shop ? t('nav_tab_shops') : ($form ? t('fm_title') : t('dash_title'))) ?></a></p>
-  <div class="app-head"><h1><?= e(($form || $shop) ? t('fm_publish') : t('up_title')) ?></h1></div>
-  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
+  <div class="app-head"><h1><?= e($buyHandle !== '' ? t('up_handle_title') : (($form || $shop) ? t('fm_publish') : t('up_title'))) ?></h1></div>
+  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
 
-  <?php if (!$link && !$form && !$shop): $links = user_links((int) $u['id']); $forms = user_forms((int) $u['id']); $shopsAll = user_shops((int) $u['id']); ?>
+  <?php if ($buyHandle !== ''): ?>
+    <form method="post" class="card" novalidate>
+      <?= csrf_field() ?><input type="hidden" name="buy_handle" value="<?= e($buyHandle) ?>">
+      <p class="lead" style="font-size:15px"><?= e(t('up_handle_lead', ['handle' => $buyHandle])) ?></p>
+      <div class="field"><span class="label"><?= e(t('link_handle')) ?></span><div class="result-link" style="font-size:22px"><?= e(current_domain()) ?>/<?= e($buyHandle) ?></div></div>
+      <?php if ($handleFee <= 0): ?>
+        <div class="locked"><?= e(slug_taken($buyHandle) ? t('err_code_taken') : (premium_slug_block($buyHandle, null) ? t('up_handle_owned') : t('up_handle_not_premium'))) ?></div>
+        <a class="btn btn-primary" href="/link"><?= e(t('dash_new')) ?></a>
+      <?php else: ?>
+        <div class="tot big" style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;border-top:1px solid var(--line);padding-top:14px;margin:6px 0 18px"><span><?= e(t('up_handle_fee')) ?></span><span>RM<?= number_format($handleFee / 100, 0) ?></span></div>
+        <?php if (billplz_enabled()): ?><button class="btn btn-wa btn-lg btn-block" type="submit"><?= e(t('up_pay')) ?> →</button><p class="hint center" style="margin-top:10px"><?= e(t('up_methods')) ?></p>
+        <?php else: ?><div class="locked"><?= e(t('up_offline')) ?></div><?php if ($wa !== ''): ?><a class="btn btn-wa btn-lg btn-block" href="https://wa.me/<?= e($wa) ?>?text=<?= rawurlencode('Hi WSAP, I want to buy the premium handle ' . $buyHandle . '. Account: ' . $u['email']) ?>" rel="noopener"><?= e(t('footer_contact')) ?></a><?php endif; endif; ?>
+      <?php endif; ?>
+    </form>
+  <?php elseif (!$link && !$form && !$shop): $links = user_links((int) $u['id']); $forms = user_forms((int) $u['id']); $shopsAll = user_shops((int) $u['id']); ?>
     <div class="card">
       <p><?= e(t('up_pick')) ?></p>
       <?php if (!$links && !$forms): ?><a class="btn btn-primary" href="/link"><?= e(t('dash_new')) ?></a><?php endif; ?>
@@ -88,6 +106,7 @@ page_start(['title' => ($form || $shop) ? t('fm_publish') : t('up_title'), 'noin
         <label for="handle"><?= e(t('up_handle')) ?> <small><?= e(t('gen_optional')) ?></small></label>
         <div class="inline-prefix"><span><?= e($link['domain']) ?>/</span><input id="handle" name="handle" maxlength="30" value="<?= e((string) ($_POST['handle'] ?? ($_GET['handle'] ?? ''))) ?>" placeholder="<?= e(t('up_handle_ph')) ?>" pattern="[a-z0-9-]{3,30}"></div>
         <p class="hint"><?= e(t('up_handle_hint')) ?></p>
+        <?php $typed = strtolower(trim((string) ($_POST['handle'] ?? ($_GET['handle'] ?? '')))); $tf = $typed !== '' ? handle_fee_sen($typed, (int) $u['id']) : 0; if ($tf > 0): ?><p class="hint" style="color:var(--green)">★ <?= e(t('up_handle_premium_note', ['price' => 'RM' . number_format($tf / 100, 0)])) ?></p><?php endif; ?>
       </div>
       <?php endif; ?>
 

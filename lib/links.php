@@ -109,14 +109,10 @@ function assert_custom_code(string $code, ?int $userId = null): void
     $vars = ['n' => slug_min_length()];
     if ($err === 'err_code_premium') {
         $row = premium_slug_block($code, $userId);
-        $wa = (string) cfg('support_whatsapp');
         $vars['price'] = 'RM' . number_format((float) ($row['price_myr'] ?? 0), 0);
         $vars['handle'] = $code;
-        $msg = t($err, $vars);
-        if ($wa !== '') {
-            $msg .= ' ' . t('err_code_premium_wa') . ': wa.me/' . $wa;
-        }
-        throw new InvalidArgumentException($msg);
+        // The page renders this with a "Buy this handle" button (see error_html()).
+        throw new InvalidArgumentException(t($err, $vars) . ' [[buy:' . $code . ']]');
     }
     throw new InvalidArgumentException(t($err, $vars));
 }

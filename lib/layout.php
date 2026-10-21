@@ -81,6 +81,15 @@ function page_start(array $o = []): void
 <?php
 }
 
+/** Escape an error message; a trailing "[[buy:handle]]" marker becomes a "Buy this handle" button. */
+function error_html(string $err): string
+{
+    if (preg_match('/^(.*)\s\[\[buy:([a-z0-9-]+)\]\]$/s', $err, $m)) {
+        return e($m[1]) . ' <a class="btn btn-sm btn-primary" style="margin-left:8px" href="/upgrade?handle=' . e($m[2]) . '">★ ' . e(t('up_buy_handle')) . '</a>';
+    }
+    return e($err);
+}
+
 function page_end(): void
 {
     $wa = (string) cfg('support_whatsapp');

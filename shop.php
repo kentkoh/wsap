@@ -122,7 +122,7 @@ page_start(['title' => $shop ? t('sh_settings') : t('sh_new'), 'noindex' => true
   <?= app_nav('shops') ?>
   <?php if ($shop): ?><?= shop_nav($shop, 'settings') ?><?php else: ?><p><a href="/shops">← <?= e(t('nav_tab_shops')) ?></a></p><?php endif; ?>
   <div class="app-head"><h1><?= e($shop ? t('sh_settings') : t('sh_new')) ?></h1></div>
-  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
+  <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
 
   <form method="post" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?><?php if ($shop): ?><input type="hidden" name="id" value="<?= (int) $shop['id'] ?>"><?php endif; ?>
