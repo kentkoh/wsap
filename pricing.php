@@ -34,16 +34,15 @@ page_start(['title' => t('nav_pricing'), 'description' => t('pr_lead')]);
         <h3><?= e(plan_name('premium')) ?></h3>
         <p class="desc"><?= e(t('pr_prem_d')) ?></p>
         <div class="amount"><?= e(price('premium', $cur)) ?><small><?= e(t('pr_per_year')) ?></small></div>
-        <ul><li><?= e(t('pr_prem_1')) ?></li><li><?= e(t('pr_prem_2')) ?></li><li><?= e(t('pr_prem_3')) ?></li><li><?= e(t('pr_prem_4')) ?></li><li><?= e(t('cmp_8')) ?></li><li><?= e(t('cmp_10')) ?></li></ul>
+        <ul><li><?= e(t('pr_prem_1')) ?></li><li><?= e(t('pr_prem_2')) ?></li><li><?= e(t('pr_prem_3')) ?></li><li><?= e(t('pr_prem_4')) ?></li><li><?= e(t('pr_prem_5')) ?></li><li><?= e(t('cmp_10')) ?></li></ul>
         <a class="btn btn-wa btn-lg" href="<?= e($upgradeHref) ?>" rel="noopener"><?= e(t('pr_cta_prem')) ?> →</a>
       </div>
-      <div class="plan soon">
-        <span class="tag"><?= e(t('pr_soon')) ?></span>
-        <h3><?= e(plan_name('business')) ?></h3>
-        <p class="desc"><?= e(t('pr_biz_d')) ?></p>
-        <div class="amount"><?= e(price('business', $cur)) ?><small><?= e(t('pr_per_year')) ?></small></div>
-        <ul><li><?= e(t('pr_biz_1')) ?></li><li><?= e(t('pr_biz_2')) ?></li><li><?= e(t('pr_biz_3')) ?></li><li><?= e(t('pr_biz_4')) ?></li></ul>
-        <a class="btn btn-ghost btn-lg" href="<?= e($waitlistHref) ?>" rel="noopener"><?= e(t('pr_cta_biz')) ?></a>
+      <div class="plan">
+        <h3><?= e(t('nav_tab_forms')) ?></h3>
+        <p class="desc"><?= e(t('pr_form_d')) ?></p>
+        <div class="amount"><?= e(price('form', $cur)) ?><small><?= e(t('pr_per_form')) ?></small></div>
+        <ul><li><?= e(t('fm_feat_1')) ?></li><li><?= e(t('fm_feat_2')) ?></li><li><?= e(t('fm_feat_3')) ?></li><li><?= e(t('fm_feat_4')) ?></li></ul>
+        <a class="btn btn-ghost btn-lg" href="/form"><?= e(t('pr_cta_form')) ?></a>
       </div>
     </div>
     <p class="pay-note"><?= e(t('pr_pay_note')) ?></p>

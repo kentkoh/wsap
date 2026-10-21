@@ -13,6 +13,10 @@ AddDefaultCharset utf-8
 
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
+  # Forms: wsap.me/f/slug  ·  Shops: wsap.me/s/slug
+  RewriteRule ^f/([A-Za-z0-9-]{3,30})/?$ form_view.php?s=$1 [L,QSA]
+  RewriteRule ^s/([A-Za-z0-9-]{3,30})/?$ shop_view.php?s=$1 [L,QSA]
+
   # Never expose .php in URLs: /login → login.php (only when that file exists)
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{DOCUMENT_ROOT}/$1.php -f

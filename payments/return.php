@@ -21,6 +21,9 @@ try {
     $row = db_row('SELECT * FROM payments WHERE bill_id = ?', [$billId]);
     if ($row && $row['status'] === 'paid') {
         flash('ok', t('up_paid'));
+        if (($row['item_type'] ?? 'link') === 'form') {
+            redirect('/forms');
+        }
         redirect($row['link_id'] ? '/qr?id=' . (int) $row['link_id'] : '/dashboard');
     }
     flash('warn', t('up_not_paid'));

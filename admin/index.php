@@ -5,7 +5,8 @@ require dirname(__DIR__) . '/lib/layout.php';
 
 $me = require_admin();
 $tab = (string) ($_GET['tab'] ?? 'users');
-$plans = array_keys(cfg('plans'));
+$plans = array_keys(cfg('plans'));                       // all priced items (for pricing tab)
+$userPlans = array_values(array_diff($plans, ['form', 'shop'])); // account-level plans only
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     csrf_check();
@@ -13,7 +14,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     try {
         if ($act === 'plan') {
             $uid = (int) $_POST['uid'];
-            $plan = in_array($_POST['plan'] ?? '', $plans, true) ? $_POST['plan'] : 'free';
+            $plan = in_array($_POST['plan'] ?? '', $userPlans, true) ? $_POST['plan'] : 'free';
             $until = trim((string) ($_POST['until'] ?? ''));
             $until = $plan === 'free' || $until === '' ? null : $until . ' 23:59:59';
             db_exec('UPDATE users SET plan = ?, plan_until = ? WHERE id = ?', [$plan, $until, $uid]);
@@ -90,7 +91,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
       <td><a href="?tab=links&q=<?= urlencode($r['email']) ?>"><?= (int) $r['n_links'] ?></a></td>
       <td><?= $r['verified_at'] ? '✓' : '—' ?></td><td class="small"><?= e(substr((string) $r['created_at'], 0, 10)) ?></td>
       <td><form method="post" style="display:flex;gap:4px"><?= csrf_field() ?><input type="hidden" name="act" value="plan"><input type="hidden" name="uid" value="<?= (int) $r['id'] ?>">
-        <select class="select" name="plan"><?php foreach ($plans as $p): ?><option value="<?= $p ?>" <?= $r['plan'] === $p ? 'selected' : '' ?>><?= e(plan_name($p)) ?></option><?php endforeach; ?></select>
+        <select class="select" name="plan"><?php foreach ($userPlans as $p): ?><option value="<?= $p ?>" <?= $r['plan'] === $p ? 'selected' : '' ?>><?= e(plan_name($p)) ?></option><?php endforeach; ?></select>
         <input class="input" type="date" name="until" value="<?= e(substr((string) ($r['plan_until'] ?? ''), 0, 10)) ?>" title="Plan until"><button class="btn btn-sm btn-ghost">Save</button></form></td>
       <td><?php if ((int) $r['id'] === (int) $me['id']): ?>admin (you)<?php else: ?><form method="post" style="display:flex;gap:4px"><?= csrf_field() ?><input type="hidden" name="act" value="role"><input type="hidden" name="uid" value="<?= (int) $r['id'] ?>">
         <select class="select" name="role"><option value="user" <?= $r['role'] === 'user' ? 'selected' : '' ?>>user</option><option value="admin" <?= $r['role'] === 'admin' ? 'selected' : '' ?>>admin</option></select><button class="btn btn-sm btn-ghost">Save</button></form><?php endif; ?></td>

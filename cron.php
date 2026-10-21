@@ -37,6 +37,26 @@ foreach ([7, 0] as $daysAhead) {
     }
 }
 
+// 1b. form expiry reminders (same cadence)
+foreach ([7, 0] as $daysAhead) {
+    $day = gmdate('Y-m-d', time() + $daysAhead * 86400);
+    $rows = db_rows('SELECT f.*, u.email, u.name FROM forms f JOIN users u ON u.id = f.user_id WHERE f.premium_until >= ? AND f.premium_until < ?', [$day . ' 00:00:00', $day . ' 23:59:59']);
+    foreach ($rows as $f) {
+        $flag = 'remindf:' . $f['id'] . ':' . $daysAhead . ':' . $day;
+        if (setting($flag) !== '') {
+            continue;
+        }
+        $label = $f['domain'] . '/f/' . $f['slug'];
+        $ok = send_mail((string) $f['email'], (string) $f['name'],
+            t($daysAhead ? 'mail_expiring_subject' : 'mail_expired_subject', ['link' => $label]),
+            mail_template(t($daysAhead ? 'mail_expiring_title' : 'mail_expired_title'),
+                '<p>' . t($daysAhead ? 'mail_expiring_body' : 'mail_expired_body', ['link' => $label, 'date' => substr((string) $f['premium_until'], 0, 10)]) . '</p>',
+                base_url() . '/upgrade?form=' . (int) $f['id'], t('up_extend')));
+        set_setting($flag, $ok ? now() : 'failed');
+        $out[] = "form reminder $daysAhead d: {$f['slug']}";
+    }
+}
+
 // 2. pending payments older than 15 min → ask Billplz
 try {
     require __DIR__ . '/lib/billplz.php';

@@ -78,6 +78,19 @@ cp config.local.example.php config.local.php && nano config.local.php   # DB pas
 4. Daily cron (cPanel → Cron Jobs): `php /home/kuantan1/public_html/wsap.me/cron.php CRON_KEY` — expiry reminders (7 days before + on the day), re-sync pending bills, purge clicks older than 13 months. `cron_key` lives in config.local.php.
 5. Until Billplz keys are set, the upgrade page shows a WhatsApp button and admin can grant plans manually.
 
+## Products (walink parity)
+
+| Product | URL | Price (default, admin-editable) |
+|---|---|---|
+| Free link | `wsap.me/abc123` | free, never expires, not editable |
+| Premium link | `wsap.me/yourbrand` | per link / year — edit, analytics, styled QR, **Smart Link** routing (`/smart?id=`) |
+| Form | `wsap.me/f/slug` | per form / year — builder `/form`, inbox `/responses`, public page `form_view.php` |
+| Shop | `wsap.me/s/slug` | coming next |
+
+Smart Links: destinations with rules (always/weighted, business hours + timezone, country, traffic source); first matching rule wins, catch-all split by weight; routing only while the link is Premium. Forms: up to 20 questions of 11 types, step or single page, answers composed into the first WhatsApp message, optional saved responses + CSV, funnel counters.
+
+Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`.
+
 ## Deploy (every update)
 
 ```bash
@@ -94,5 +107,4 @@ cd /home/kuantan1/public_html/wsap.me && mysql -u kuantan1_wsap -p kuantan1_wsap
 ## Roadmap
 
 - Phase 2 (done): Billplz yearly checkout per link, expiry reminder emails, admin payments tab.
-- Phase 3 (Business): landing page before chat, multi-agent routing (hours / rotation / weighted),
-  **Forms** (walink-style questionnaire that pre-fills the chat), Pixel/GA events, bio page.
+- Phase 3 (done): Smart Links, Forms. Next: Shops (catalogue + cart → WhatsApp order), landing page before chat, Pixel/GA events.

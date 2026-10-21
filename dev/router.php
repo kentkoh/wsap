@@ -36,6 +36,17 @@ if (preg_match('#^/([a-z0-9/_-]+)$#', $path, $m)) {
         return true;
     }
 }
+// Forms / shops
+if (preg_match('#^/f/([A-Za-z0-9-]{3,30})$#', $path, $m)) {
+    $_GET['s'] = $m[1];
+    require $root . '/form_view.php';
+    return true;
+}
+if (preg_match('#^/s/([A-Za-z0-9-]{3,30})$#', $path, $m) && is_file($root . '/shop_view.php')) {
+    $_GET['s'] = $m[1];
+    require $root . '/shop_view.php';
+    return true;
+}
 // Short link
 if (preg_match('#^/([A-Za-z0-9-]{3,30})$#', $path, $m)) {
     $_GET['c'] = $m[1];

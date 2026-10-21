@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/app_nav.php';
 
 $u = require_login();
 $links = user_links((int) $u['id']);
@@ -13,6 +14,7 @@ $wa = (string) cfg('support_whatsapp');
 page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page-app']);
 ?>
 <section class="app wrap">
+  <?= app_nav('links') ?>
   <?php if (empty($u['verified_at'])): ?>
   <form method="post" action="/verify" class="flash flash-warn" style="display:flex;gap:12px;align-items:center;margin-bottom:18px">
     <?= csrf_field() ?><span><?= e(t('auth_verify_banner')) ?></span><button class="btn btn-sm btn-ghost" type="submit" style="margin-left:auto"><?= e(t('auth_verify_resend')) ?></button>
