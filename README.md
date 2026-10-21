@@ -57,7 +57,7 @@ Emails are written to `dev/mail.log` when no Brevo key is set.
 3. Clone and configure:
 
 ```bash
-cd /home/kuantan1/public_html/wsap.me && mv wsap.me wsap.me_old && git clone https://github.com/kentkoh/wsap.git wsap.me
+cd /home/kuantan1/public_html && mv wsap.me wsap.me_old && git clone https://github.com/kentkoh/wsap.git wsap.me
 cd /home/kuantan1/public_html/wsap.me
 mysql -u kuantan1_wsap -p kuantan1_wsap < db/schema.sql
 cp config.local.example.php config.local.php && nano config.local.php   # DB pass, ip_salt, support_whatsapp, brevo, google
