@@ -34,7 +34,8 @@ page_start(['title' => t('nav_pricing'), 'description' => t('pr_lead')]);
         <h3><?= e(plan_name('premium')) ?></h3>
         <p class="desc"><?= e(t('pr_prem_d')) ?></p>
         <div class="amount"><?= e(price('premium', $cur)) ?><small><?= e(t('pr_per_year')) ?></small></div>
-        <ul><li><?= e(t('pr_prem_1')) ?></li><li><?= e(t('pr_prem_2')) ?></li><li><?= e(t('pr_prem_3')) ?></li><li><?= e(t('pr_prem_4')) ?></li><li><?= e(t('pr_prem_5')) ?></li><li><?= e(t('cmp_10')) ?></li></ul>
+        <ul><li><?= e(t('pr_prem_1')) ?></li><li><?= e(t('pr_prem_2')) ?></li><li><?= e(t('pr_prem_3')) ?></li><li><?= e(t('pr_prem_4')) ?></li><li><?= e(t('cmp_10')) ?></li></ul>
+        <p class="small" style="background:var(--lime-2);border-radius:10px;padding:8px 12px;margin:0 0 14px">⚡ <b><?= e(t('pr_smart_addon', ['price' => price('smart')])) ?></b> <a href="/smart-links"><?= e(t('pr2_learn')) ?> →</a></p>
         <a class="btn btn-wa btn-lg" href="<?= e($upgradeHref) ?>" rel="noopener"><?= e(t('pr_cta_prem')) ?> →</a>
       </div>
       <div class="plan">

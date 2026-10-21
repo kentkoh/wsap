@@ -24,6 +24,21 @@ function premium_price_sen(string $plan = 'premium'): int
     return (int) round(((float) plan_cfg($plan)['myr']) * 100);
 }
 
+/** Smart Links add-on: priced per month, billed for the same years as the link (×12). */
+function smart_price_sen_per_year(): int
+{
+    return premium_price_sen('smart') * 12;
+}
+
+/** Is the Smart Links add-on active on this link? (account-level business plan also unlocks it) */
+function link_has_smart(array $link, ?array $owner = null): bool
+{
+    if (!empty($link['smart_until']) && $link['smart_until'] > now()) {
+        return true;
+    }
+    return $owner !== null && user_plan($owner) === 'business';
+}
+
 /** One-time fee (sen) for a premium handle the user does not own yet; 0 when not premium or already theirs. */
 function handle_fee_sen(string $handle, int $userId): int
 {
@@ -32,11 +47,15 @@ function handle_fee_sen(string $handle, int $userId): int
     return $row ? (int) round(((float) $row['price_myr']) * 100) : 0;
 }
 
-/** Start a checkout for a link: creates a pending payment + Billplz bill, returns the bill URL. */
-function start_premium_checkout(array $user, array $link, string $handle = '', int $years = 1): string
+/** Start a checkout for a link: creates a pending payment + Billplz bill, returns the bill URL. $smart = add the Smart Links add-on. */
+function start_premium_checkout(array $user, array $link, string $handle = '', int $years = 1, bool $smart = false): string
 {
     $handle = strtolower(trim($handle));
     $fee = 0;
+    $years = max(1, min(3, $years));
+    if ($smart) {
+        $fee += smart_price_sen_per_year() * $years;
+    }
     if ($handle !== '' && !(int) $link['is_custom']) {
         $err = custom_code_error($handle, (int) $user['id']);
         if ($err !== '' && $err !== 'err_code_premium') {
@@ -45,12 +64,19 @@ function start_premium_checkout(array $user, array $link, string $handle = '', i
         if ($handle !== $link['code'] && slug_taken($handle)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
-        $fee = handle_fee_sen($handle, (int) $user['id']); // premium word: fee added to this bill
+        $fee += handle_fee_sen($handle, (int) $user['id']); // premium word: fee added to this bill
     } else {
         $handle = '';
     }
-    $desc = 'WSAP Premium link ' . short_display($link) . ($fee ? ' + handle ' . $handle : '');
-    return start_checkout($user, 'link', (int) $link['id'], 'premium', $desc, $years, $handle, $fee);
+    $desc = 'WSAP Premium link ' . short_display($link) . ($handle !== '' ? ' + handle ' . $handle : '') . ($smart ? ' + Smart Links' : '');
+    return start_checkout($user, 'link', (int) $link['id'], 'premium', $desc, $years, $handle, $fee, false, $smart ? 'smart' : '');
+}
+
+/** Buy the Smart Links add-on on its own for an already-Premium link. */
+function start_smart_checkout(array $user, array $link, int $years = 1): string
+{
+    $years = max(1, min(3, $years));
+    return start_checkout($user, 'link', (int) $link['id'], 'premium', 'WSAP Smart Links add-on ' . short_display($link), $years, '', smart_price_sen_per_year() * $years, true, 'smart');
 }
 
 /** Buy a premium handle on its own (one-time). It is assigned to the user when paid. */
@@ -84,7 +110,7 @@ function start_shop_checkout(array $user, array $shop, int $years = 1): string
 }
 
 /** Generic: pending payment row + Billplz bill. Returns the bill URL. $extraSen = one-time add-on (premium handle). */
-function start_checkout(array $user, string $itemType, int $itemId, string $plan, string $desc, int $years = 1, string $handle = '', int $extraSen = 0, bool $feeOnly = false): string
+function start_checkout(array $user, string $itemType, int $itemId, string $plan, string $desc, int $years = 1, string $handle = '', int $extraSen = 0, bool $feeOnly = false, string $addons = ''): string
 {
     require_once WSAP_ROOT . '/lib/billplz.php';
     $years = max(1, min(3, $years));
@@ -92,14 +118,14 @@ function start_checkout(array $user, string $itemType, int $itemId, string $plan
     if ($amount <= 0) {
         throw new RuntimeException('Price not set');
     }
-    if (!$feeOnly) {
+    if (!$feeOnly || $addons !== '') {
         $desc .= ' × ' . $years . ' year' . ($years > 1 ? 's' : '');
     }
     $bill = billplz_create_bill((string) $user['email'], (string) $user['name'], $amount, $desc, $itemType . ':' . $itemId);
     db_insert(
-        'INSERT INTO payments (user_id, link_id, item_type, item_id, bill_id, provider, amount, currency, status, handle, years, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [(int) $user['id'], $itemType === 'link' ? $itemId : null, $itemType, $itemId ?: null, $bill['id'], 'billplz', $amount, 'MYR', 'pending', $handle, $years, now()]
+        'INSERT INTO payments (user_id, link_id, item_type, item_id, bill_id, provider, amount, currency, status, handle, addons, years, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [(int) $user['id'], $itemType === 'link' ? $itemId : null, $itemType, $itemId ?: null, $bill['id'], 'billplz', $amount, 'MYR', 'pending', $handle, $addons . ($feeOnly && $addons !== '' ? ',addon-only' : ''), $years, now()]
     );
     return $bill['url'];
 }
@@ -140,6 +166,17 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
     } elseif ($type === 'link' && $itemId) {
         $link = db_row('SELECT * FROM links WHERE id = ?', [$itemId]);
         if ($link) {
+            $addons = explode(',', (string) ($p['addons'] ?? ''));
+            if (in_array('smart', $addons, true)) {
+                $smartUntil = extend_until($link['smart_until'] ?? null, (int) $p['years']);
+                db_exec('UPDATE links SET smart_until = ?, type = ?, updated_at = ? WHERE id = ?', [$smartUntil, 'smart', now(), $itemId]);
+            }
+            if (in_array('addon-only', $addons, true)) {
+                // add-on bought alone: the link's Premium term is untouched
+                $label = $link['domain'] . '/' . $link['code'] . ' (Smart Links)';
+                $until = $smartUntil ?? '';
+                goto receipt;
+            }
             $until = extend_until($link['premium_until'] ?? null, (int) $p['years']);
             $code = $link['code'];
             $custom = (int) $link['is_custom'];
@@ -167,6 +204,7 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
             $label = $shop['domain'] . '/' . $shop['slug'];
         }
     }
+    receipt:
     try {
         require_once WSAP_ROOT . '/lib/mail.php';
         $u = db_row('SELECT * FROM users WHERE id = ?', [(int) $p['user_id']]);

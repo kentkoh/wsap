@@ -226,7 +226,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
     <div class="table-wrap"><table class="table">
       <tr><th>Plan</th><th>USD / year (wsap.me)</th><th>RM / year (wsap.my, charged)</th><th>Max links (0 = unlimited)</th></tr>
       <?php foreach ($plans as $p): $pc = plan_cfg($p); ?>
-      <tr><td><b><?= e(plan_name($p)) ?></b></td>
+      <tr><td><b><?= e(plan_name($p)) ?></b><?= (cfg("plans.$p.period") ?? 'year') === 'month' ? ' <span class="badge">per month</span>' : '' ?></td>
         <td><input class="input" name="plan_<?= $p ?>_usd" type="number" step="0.01" min="0" value="<?= e(setting("plan.$p.usd")) ?>" placeholder="<?= e((string) cfg("plans.$p.usd")) ?>"></td>
         <td><input class="input" name="plan_<?= $p ?>_myr" type="number" step="0.01" min="0" value="<?= e(setting("plan.$p.myr")) ?>" placeholder="<?= e((string) cfg("plans.$p.myr")) ?>"></td>
         <td><input class="input" name="plan_<?= $p ?>_max_links" type="number" step="1" min="0" value="<?= e(setting("plan.$p.max_links")) ?>" placeholder="<?= e((string) cfg("plans.$p.max_links")) ?>"></td></tr>

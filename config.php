@@ -43,6 +43,7 @@ return [
     'business' => ['name' => 'Business', 'usd' => 19, 'myr' => 79, 'max_links' => 0],
     'form'     => ['name' => 'Form',     'usd' => 29, 'myr' => 119, 'max_links' => 0],  // per published form, per year
     'shop'     => ['name' => 'Shop',     'usd' => 49, 'myr' => 199, 'max_links' => 0],  // per published shop, per year
+    'smart'    => ['name' => 'Smart Links', 'usd' => 5, 'myr' => 19, 'max_links' => 0, 'period' => 'month'],  // add-on per link, PER MONTH (billed yearly ×12)
   ],
 
   // Billplz (https://www.billplz.com → Settings → Account → API Secret Key, X Signature Key; Billing → Collections)

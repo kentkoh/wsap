@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS links (
   is_custom   INTEGER NOT NULL DEFAULT 0,
   active      INTEGER NOT NULL DEFAULT 1,
   premium_until TEXT NULL,
+  smart_until TEXT NULL,
   clicks      INTEGER NOT NULL DEFAULT 0,
   session_key TEXT NULL,
   created_at  TEXT NOT NULL,
@@ -76,6 +77,7 @@ CREATE TABLE IF NOT EXISTS payments (
   currency   TEXT NOT NULL DEFAULT 'MYR',
   status     TEXT NOT NULL DEFAULT 'pending',
   handle     TEXT NOT NULL DEFAULT '',
+  addons     TEXT NOT NULL DEFAULT '',
   years      INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL,
   paid_at    TEXT NULL

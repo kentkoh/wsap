@@ -26,6 +26,10 @@ $wa = (string) cfg('support_whatsapp');
 $cur = currency();
 $plan = $shop ? 'shop' : ($form ? 'form' : 'premium');
 $years = max(1, min(3, (int) ($_POST['years'] ?? 1)));
+$smartOnly = $link && isset($_GET['smart']) && link_is_premium($link, $u);           // add-on for an already-Premium link
+$addSmart = $link && (isset($_POST['addsmart']) || (isset($_GET['addsmart']) && $_SERVER['REQUEST_METHOD'] !== 'POST')); // tick to buy together
+$smartMonthly = price('smart');
+$smartYearSen = smart_price_sen_per_year();
 
 if (($link || $form || $shop || $buyHandle !== '') && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     csrf_check();
@@ -34,9 +38,10 @@ if (($link || $form || $shop || $buyHandle !== '') && ($_SERVER['REQUEST_METHOD'
             throw new RuntimeException(t('up_offline'));
         }
         $url = $buyHandle !== '' ? start_handle_checkout($u, $buyHandle)
+            : ($smartOnly ? start_smart_checkout($u, $link, $years)
             : ($shop ? start_shop_checkout($u, $shop, $years)
             : ($form ? start_form_checkout($u, $form, $years)
-            : start_premium_checkout($u, $link, (string) ($_POST['handle'] ?? ''), $years)));
+            : start_premium_checkout($u, $link, (string) ($_POST['handle'] ?? ''), $years, isset($_POST['addsmart'])))));
         redirect($url);
     } catch (InvalidArgumentException | RuntimeException $e) {
         $err = $e->getMessage();
@@ -47,14 +52,15 @@ if (($link || $form || $shop || $buyHandle !== '') && ($_SERVER['REQUEST_METHOD'
 }
 
 $priceSen = premium_price_sen($plan);
-$rm = fn(int $y) => 'RM' . rtrim(rtrim(number_format($priceSen * $y / 100, 2), '0'), '.');
+$rm = fn(int $y) => 'RM' . rtrim(rtrim(number_format(($smartOnly ? $smartYearSen : $priceSen) * $y / 100, 2), '0'), '.');
+$rmSmart = fn(int $y) => 'RM' . rtrim(rtrim(number_format($smartYearSen * $y / 100, 2), '0'), '.');
 $waText = 'Hi WSAP, I want to upgrade ' . ($shop ? shop_display($shop) : ($form ? $form['domain'] . '/' . $form['slug'] : ($link ? short_display($link) : 'a link'))) . '. Account: ' . $u['email'];
 
-page_start(['title' => $buyHandle !== '' ? t('up_handle_title') : (($form || $shop) ? t('fm_publish') : t('up_title')), 'noindex' => true, 'body_class' => 'page-app']);
+page_start(['title' => $smartOnly ? t('up_smart_title') : ($buyHandle !== '' ? t('up_handle_title') : (($form || $shop) ? t('fm_publish') : t('up_title'))), 'noindex' => true, 'body_class' => 'page-app']);
 ?>
 <section class="app wrap form-narrow">
   <p><a href="<?= $shop ? '/shops' : ($form ? '/forms' : '/dashboard') ?>">← <?= e($shop ? t('nav_tab_shops') : ($form ? t('fm_title') : t('dash_title'))) ?></a></p>
-  <div class="app-head"><h1><?= e($buyHandle !== '' ? t('up_handle_title') : (($form || $shop) ? t('fm_publish') : t('up_title'))) ?></h1></div>
+  <div class="app-head"><h1><?= e($smartOnly ? t('up_smart_title') : ($buyHandle !== '' ? t('up_handle_title') : (($form || $shop) ? t('fm_publish') : t('up_title')))) ?></h1></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
 
   <?php if ($buyHandle !== ''): ?>
@@ -110,6 +116,14 @@ page_start(['title' => $buyHandle !== '' ? t('up_handle_title') : (($form || $sh
       </div>
       <?php endif; ?>
 
+      <?php if ($link && !$smartOnly): $hasSmart = link_has_smart($link, $u); ?>
+      <label class="addon <?= $addSmart ? 'on' : '' ?>" id="addon-smart">
+        <input type="checkbox" name="addsmart" value="1" <?= $addSmart ? 'checked' : '' ?> <?= $hasSmart ? 'disabled' : '' ?>>
+        <span class="addon-body"><span class="kicker" style="margin:0 0 2px">⚡ <?= e(t('up_smart_k')) ?></span><b><?= e(t('up_smart_tick', ['price' => $smartMonthly])) ?></b><small><?= e($hasSmart ? t('up_smart_have', ['date' => substr((string) $link['smart_until'], 0, 10)]) : t('up_smart_tick_d')) ?> <a href="/smart-links" target="_blank" rel="noopener"><?= e(t('pr2_learn')) ?> ↗</a></small></span>
+        <span class="addon-price" data-smart-year="<?= $smartYearSen ?>">+<?= e($rmSmart(1)) ?><small>/<?= e(t('up_year')) ?></small></span>
+      </label>
+      <?php endif; ?>
+      <?php if ($smartOnly): ?><div class="locked" style="background:var(--lime-2);border-color:#c4e88a;color:#2d4700">⚡ <?= e(t('up_smart_only_note', ['price' => $smartMonthly])) ?></div><?php endif; ?>
       <div class="field"><span class="label"><?= e(t('up_years')) ?></span>
         <div class="seg"><?php foreach ([1, 2, 3] as $y): ?><input type="radio" name="years" id="y<?= $y ?>" value="<?= $y ?>" <?= $y === $years ? 'checked' : '' ?>><label for="y<?= $y ?>"><?= $y ?> <?= e($y === 1 ? t('up_year') : t('up_years_pl')) ?> · <?= $rm($y) ?></label><?php endforeach; ?></div>
         <?php if ($cur !== 'MYR'): ?><p class="hint"><?= e(t('up_charged_myr', ['usd' => price($plan, 'USD')])) ?></p><?php endif; ?>
@@ -119,6 +133,7 @@ page_start(['title' => $buyHandle !== '' ? t('up_handle_title') : (($form || $sh
         <?php foreach ($features as $k): ?><li>✓ <?= e(t($k)) ?></li><?php endforeach; ?>
       </ul>
 
+      <?php if ($link): ?><div class="tot big" style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-bottom:14px;font-weight:800;font-size:18px"><span><?= e(t('sh_msg_total')) ?></span><span id="up-total" data-base="<?= $smartOnly ? 0 : $priceSen ?>" data-smart="<?= $smartYearSen ?>" data-fee="<?= (!$smartOnly && isset($tf)) ? (int) $tf : 0 ?>"></span></div><?php endif; ?>
       <?php if (billplz_enabled()): ?>
         <button class="btn btn-wa btn-lg btn-block" type="submit"><?= e(t('up_pay')) ?> →</button>
         <p class="hint center" style="margin-top:10px"><?= e(t('up_methods')) ?></p>
@@ -129,4 +144,7 @@ page_start(['title' => $buyHandle !== '' ? t('up_handle_title') : (($form || $sh
     </form>
   <?php endif; ?>
 </section>
+<script>
+(function(){ var tot=document.getElementById('up-total'); if(!tot) return; var f=tot.closest('form'); function rm(s){ var v=s/100; return 'RM'+(v%1===0?v.toFixed(0):v.toFixed(2)); } function calc(){ var y=+(f.querySelector('input[name=years]:checked')||{value:1}).value; var sm=f.querySelector('input[name=addsmart]'); var smartOn=sm&&sm.checked&&!sm.disabled; var only=+tot.dataset.base===0; var total=(+tot.dataset.base)*y+(smartOn||only?(+tot.dataset.smart)*y:0)+(+tot.dataset.fee); tot.textContent=rm(total); var box=document.getElementById('addon-smart'); if(box) box.classList.toggle('on', !!smartOn); } f.addEventListener('change', calc); calc(); })();
+</script>
 <?php page_end();

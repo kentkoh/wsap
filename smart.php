@@ -15,7 +15,8 @@ if (!$link) {
     http_response_code(404);
     exit('Not found');
 }
-$premium = link_is_premium($link, $u);
+$premium = link_has_smart($link, $u);
+$linkPremium = link_is_premium($link, $u);
 $maxDest = (int) (setting('smart_max_destinations') ?: 10);
 $err = null;
 $editing = null;
@@ -118,7 +119,8 @@ page_start(['title' => t('sm_title') . ' · ' . short_display($link), 'noindex' 
   <p class="lead" style="font-size:15px;margin-bottom:18px"><?= e(t('sm_lead')) ?></p>
 
   <?php if (!$premium): ?>
-    <div class="locked">🔒 <?= e(t('sm_premium')) ?> <a href="/upgrade?id=<?= $id ?>"><b><?= e(t('dash_upgrade')) ?> →</b></a></div>
+    <div class="card" style="border-color:var(--green);display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center"><div><span class="kicker"><?= e(t('sm_addon_k')) ?></span><h3 style="font-size:20px;margin:4px 0 6px"><?= e(t('sm_addon_t', ['price' => price('smart')])) ?></h3><p class="muted" style="margin:0;font-size:14.5px"><?= e($linkPremium ? t('sm_addon_d') : t('sm_addon_d_free')) ?></p></div><a class="btn btn-wa btn-lg" href="/upgrade?id=<?= $id ?><?= $linkPremium ? '&smart=1' : '&addsmart=1' ?>">⚡ <?= e(t('sm_addon_cta')) ?></a></div>
+    <p class="muted small" style="margin-top:12px"><a href="/smart-links"><?= e(t('pr2_learn')) ?> →</a></p>
   <?php else: ?>
     <form method="post" class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px"><?= csrf_field() ?><input type="hidden" name="act" value="enable"><input type="hidden" name="id" value="<?= $id ?>">
       <label class="switch"><input type="checkbox" name="on" <?= ($link['type'] ?? '') === 'smart' ? 'checked' : '' ?> onchange="this.form.submit()"> <?= e(t('sm_enabled')) ?></label>

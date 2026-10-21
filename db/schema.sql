@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS links (
   is_custom   TINYINT(1)   NOT NULL DEFAULT 0,
   active      TINYINT(1)   NOT NULL DEFAULT 1,
   premium_until DATETIME   NULL,                         -- link-level Premium (per link, per year)
+  smart_until   DATETIME   NULL,                         -- Smart Links add-on (routing) active until
   clicks      INT UNSIGNED NOT NULL DEFAULT 0,            -- human clicks (bots excluded)
   session_key VARCHAR(32)  NULL,                          -- anonymous creator; cleared on claim
   created_at  DATETIME     NOT NULL,
@@ -89,6 +90,7 @@ CREATE TABLE IF NOT EXISTS payments (
   currency      CHAR(3)      NOT NULL DEFAULT 'MYR',
   status        VARCHAR(10)  NOT NULL DEFAULT 'pending',  -- pending | paid | failed
   handle        VARCHAR(30)  NOT NULL DEFAULT '',          -- custom handle requested at checkout
+  addons        VARCHAR(60)  NOT NULL DEFAULT '',          -- e.g. smart
   years         TINYINT UNSIGNED NOT NULL DEFAULT 1,
   created_at    DATETIME     NOT NULL,
   paid_at       DATETIME     NULL,

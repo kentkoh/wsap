@@ -120,7 +120,7 @@ $tiles = [
 ];
 $products = [
     ['link', 'pr2_1k', 'pr2_1t', 'pr2_1d', '/premium-links', '#0b3d2e', '#e6f4ec'],
-    ['smart', 'pr2_2k', 'pr2_2t', 'pr2_2d', '/premium-links#smart', '#1d4ed8', '#e0ecff'],
+    ['smart', 'pr2_2k', 'pr2_2t', 'pr2_2d', '/smart-links', '#1d4ed8', '#e0ecff'],
     ['form', 'pr2_3k', 'pr2_3t', 'pr2_3d', '/whatsapp-forms', '#b45309', '#fef3c7'],
     ['shop', 'pr2_4k', 'pr2_4t', 'pr2_4d', '/whatsapp-shop', '#7c3aed', '#ede9fe'],
 ];
