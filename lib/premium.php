@@ -116,7 +116,7 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
         $u = db_row('SELECT * FROM users WHERE id = ?', [(int) $p['user_id']]);
         if ($u && $label !== '') {
             send_mail((string) $u['email'], (string) $u['name'], t('mail_receipt_subject', ['site' => cfg('site_name')]),
-                mail_template(t('mail_receipt_title'), '<p>' . t( === 'form' ? 'mail_receipt_body_form' : 'mail_receipt_body', ['link' => $label, 'until' => substr($until, 0, 10), 'amount' => 'RM' . number_format($p['amount'] / 100, 2)]) . '</p>', base_url() . '/dashboard', t('nav_dashboard')));
+                mail_template(t('mail_receipt_title'), '<p>' . t($type === 'form' ? 'mail_receipt_body_form' : 'mail_receipt_body', ['link' => $label, 'until' => substr($until, 0, 10), 'amount' => 'RM' . number_format($p['amount'] / 100, 2)]) . '</p>', base_url() . '/dashboard', t('nav_dashboard')));
         }
     } catch (Throwable $e) {
         error_log('receipt mail: ' . $e->getMessage());
