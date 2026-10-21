@@ -56,5 +56,5 @@ page_start(['title' => t('nav_p_links') . ' — ' . t('pl_title_1') . ' ' . t('p
   </div>
 </section>
 
-<?= product_cta_band(t('pl_pricing_t'), t('pl_pricing_d', ['price' => $price]), '/link', t('pl_cta')) ?>
+<?= product_cta_band(t('pl_pricing_t'), t('pl_pricing_d', ['price' => $price, 'smart' => price('smart')]), '/link', t('pl_cta')) ?>
 <?php page_end();

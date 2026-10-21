@@ -824,7 +824,7 @@ Phone: 0123456789',
     'pl_r4' => 'Everything else',
     'pl_r4d' => '→ Split 50/50 between Ben and Dina',
     'pl_pricing_t' => 'Simple pricing',
-    'pl_pricing_d' => '{price} per link per year, Smart routing included. Free links stay free forever.',
+    'pl_pricing_d' => '{price} per link per year. Add Smart Links routing for {smart}/month. Free links stay free forever.',
     // shop product page v2
     'ps2_h1a' => 'Sell through WhatsApp.',
     'ps2_h1b' => 'Like a pro.',

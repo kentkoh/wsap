@@ -100,7 +100,7 @@ page_start(['title' => $smartOnly ? t('up_smart_title') : ($buyHandle !== '' ? t
     $item = $shop ?: ($form ?: $link);
     $display = $shop ? shop_display($shop) : ($form ? form_display($form) : short_display($link));
     $prem = $shop ? shop_is_published($shop, $u) : ($form ? form_is_published($form, $u) : link_is_premium($link, $u));
-    $features = $shop ? ['sh_feat_1', 'sh_feat_2', 'sh_feat_3', 'sh_feat_4'] : ($form ? ['fm_feat_1', 'fm_feat_2', 'fm_feat_3', 'fm_feat_4'] : ['pr_prem_1', 'pr_prem_2', 'pr_prem_3', 'pr_prem_4', 'pr_prem_5', 'cmp_10']);
+    $features = $shop ? ['sh_feat_1', 'sh_feat_2', 'sh_feat_3', 'sh_feat_4'] : ($form ? ['fm_feat_1', 'fm_feat_2', 'fm_feat_3', 'fm_feat_4'] : ['pr_prem_1', 'pr_prem_2', 'pr_prem_3', 'pr_prem_4', 'cmp_10']);
   ?>
     <form method="post" class="card" novalidate>
       <?= csrf_field() ?><?php if ($shop): ?><input type="hidden" name="shop" value="<?= (int) $shop['id'] ?>"><?php elseif ($form): ?><input type="hidden" name="form" value="<?= (int) $form['id'] ?>"><?php else: ?><input type="hidden" name="id" value="<?= (int) $link['id'] ?>"><?php endif; ?>

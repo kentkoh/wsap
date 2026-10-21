@@ -805,7 +805,7 @@ Telefon: 0123456789',
     'pl_r4' => 'Selain itu',
     'pl_r4d' => '→ Bahagi 50/50 antara Ben dan Dina',
     'pl_pricing_t' => 'Harga mudah',
-    'pl_pricing_d' => '{price} setiap link setahun, agihan Smart termasuk. Link percuma kekal percuma selamanya.',
+    'pl_pricing_d' => '{price} setiap link setahun. Tambah agihan Smart Links untuk {smart}/bulan. Link percuma kekal percuma selamanya.',
     // shop product page v2
     'ps2_h1a' => 'Jual melalui WhatsApp.',
     'ps2_h1b' => 'Macam pro.',
