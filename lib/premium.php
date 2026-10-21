@@ -47,6 +47,12 @@ function start_form_checkout(array $user, array $form, int $years = 1): string
     return start_checkout($user, 'form', (int) $form['id'], 'form', 'WSAP Form ' . $form['domain'] . '/f/' . $form['slug'], $years);
 }
 
+/** Start a checkout for a shop (plan 'shop', per shop per year). */
+function start_shop_checkout(array $user, array $shop, int $years = 1): string
+{
+    return start_checkout($user, 'shop', (int) $shop['id'], 'shop', 'WSAP Shop ' . $shop['domain'] . '/s/' . $shop['slug'], $years);
+}
+
 /** Generic: pending payment row + Billplz bill. Returns the bill URL. */
 function start_checkout(array $user, string $itemType, int $itemId, string $plan, string $desc, int $years = 1, string $handle = ''): string
 {
@@ -110,13 +116,20 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
             db_exec('UPDATE forms SET premium_until = ?, active = 1, updated_at = ? WHERE id = ?', [$until, now(), $itemId]);
             $label = $form['domain'] . '/f/' . $form['slug'];
         }
+    } elseif ($type === 'shop' && $itemId) {
+        $shop = db_row('SELECT * FROM shops WHERE id = ?', [$itemId]);
+        if ($shop) {
+            $until = extend_until($shop['premium_until'] ?? null, (int) $p['years']);
+            db_exec('UPDATE shops SET premium_until = ?, active = 1, updated_at = ? WHERE id = ?', [$until, now(), $itemId]);
+            $label = $shop['domain'] . '/s/' . $shop['slug'];
+        }
     }
     try {
         require_once WSAP_ROOT . '/lib/mail.php';
         $u = db_row('SELECT * FROM users WHERE id = ?', [(int) $p['user_id']]);
         if ($u && $label !== '') {
             send_mail((string) $u['email'], (string) $u['name'], t('mail_receipt_subject', ['site' => cfg('site_name')]),
-                mail_template(t('mail_receipt_title'), '<p>' . t($type === 'form' ? 'mail_receipt_body_form' : 'mail_receipt_body', ['link' => $label, 'until' => substr($until, 0, 10), 'amount' => 'RM' . number_format($p['amount'] / 100, 2)]) . '</p>', base_url() . '/dashboard', t('nav_dashboard')));
+                mail_template(t('mail_receipt_title'), '<p>' . t($type === 'form' || $type === 'shop' ? 'mail_receipt_body_form' : 'mail_receipt_body', ['link' => $label, 'until' => substr($until, 0, 10), 'amount' => 'RM' . number_format($p['amount'] / 100, 2)]) . '</p>', base_url() . '/dashboard', t('nav_dashboard')));
         }
     } catch (Throwable $e) {
         error_log('receipt mail: ' . $e->getMessage());

@@ -24,6 +24,9 @@ try {
         if (($row['item_type'] ?? 'link') === 'form') {
             redirect('/forms');
         }
+        if (($row['item_type'] ?? 'link') === 'shop') {
+            redirect('/shops');
+        }
         redirect($row['link_id'] ? '/qr?id=' . (int) $row['link_id'] : '/dashboard');
     }
     flash('warn', t('up_not_paid'));

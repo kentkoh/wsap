@@ -44,6 +44,13 @@ page_start(['title' => t('nav_pricing'), 'description' => t('pr_lead')]);
         <ul><li><?= e(t('fm_feat_1')) ?></li><li><?= e(t('fm_feat_2')) ?></li><li><?= e(t('fm_feat_3')) ?></li><li><?= e(t('fm_feat_4')) ?></li></ul>
         <a class="btn btn-ghost btn-lg" href="/form"><?= e(t('pr_cta_form')) ?></a>
       </div>
+      <div class="plan">
+        <h3><?= e(t('nav_tab_shops')) ?></h3>
+        <p class="desc"><?= e(t('pr_shop_d')) ?></p>
+        <div class="amount"><?= e(price('shop', $cur)) ?><small><?= e(t('pr_per_shop')) ?></small></div>
+        <ul><li><?= e(t('sh_feat_1')) ?></li><li><?= e(t('sh_feat_2')) ?></li><li><?= e(t('sh_feat_3')) ?></li><li><?= e(t('sh_feat_4')) ?></li></ul>
+        <a class="btn btn-ghost btn-lg" href="/shop"><?= e(t('pr_cta_shop')) ?></a>
+      </div>
     </div>
     <p class="pay-note"><?= e(t('pr_pay_note')) ?></p>
   </div>

@@ -10,3 +10,8 @@ node_modules/
 dev/cj.txt
 dev/mail.log
 dev/server.log
+
+# product / shop images uploaded from the dashboard
+assets/uploads/*
+!assets/uploads/.htaccess
+!assets/uploads/.gitkeep

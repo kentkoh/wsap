@@ -85,11 +85,13 @@ cp config.local.example.php config.local.php && nano config.local.php   # DB pas
 | Free link | `wsap.me/abc123` | free, never expires, not editable |
 | Premium link | `wsap.me/yourbrand` | per link / year — edit, analytics, styled QR, **Smart Link** routing (`/smart?id=`) |
 | Form | `wsap.me/f/slug` | per form / year — builder `/form`, inbox `/responses`, public page `form_view.php` |
-| Shop | `wsap.me/s/slug` | coming next |
+| Shop | `wsap.me/s/slug` | per shop / year — settings `/shop`, products `/products`, orders `/orders`, public page `shop_view.php`, cart → `api/shop_order.php` |
 
 Smart Links: destinations with rules (always/weighted, business hours + timezone, country, traffic source); first matching rule wins, catch-all split by weight; routing only while the link is Premium. Forms: up to 20 questions of 11 types, step or single page, answers composed into the first WhatsApp message, optional saved responses + CSV, funnel counters.
 
-Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`.
+Shops: categories, photos (uploaded to `assets/uploads`, re-encoded to WebP, PHP execution blocked), option groups with price extras (`Size: S, M, L (+2)`; `*` = multi-select), delivery methods, coupons, configurable checkout fields, open/closed switch, orders with statuses + 30-day metrics + CSV. Payment is arranged in WhatsApp (same as walink).
+
+Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`, `db/upgrade_005_shops.sql`.
 
 ## Deploy (every update)
 
@@ -107,4 +109,4 @@ cd /home/kuantan1/public_html/wsap.me && mysql -u kuantan1_wsap -p kuantan1_wsap
 ## Roadmap
 
 - Phase 2 (done): Billplz yearly checkout per link, expiry reminder emails, admin payments tab.
-- Phase 3 (done): Smart Links, Forms. Next: Shops (catalogue + cart → WhatsApp order), landing page before chat, Pixel/GA events.
+- Phase 3 (done): Smart Links, Forms, Shops. Next ideas: landing page before chat, Pixel/GA events, Stripe for international cards, custom domains.

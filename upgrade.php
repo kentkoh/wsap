@@ -9,27 +9,30 @@ require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/billplz.php';
 require __DIR__ . '/lib/forms.php';
+require __DIR__ . '/lib/shops.php';
 
 $u = require_login();
 $id = (int) ($_GET['id'] ?? ($_POST['id'] ?? 0));
 $formId = (int) ($_GET['form'] ?? ($_POST['form'] ?? 0));
 $link = $id ? db_row('SELECT * FROM links WHERE id = ? AND user_id = ?', [$id, (int) $u['id']]) : null;
 $form = $formId ? db_row('SELECT * FROM forms WHERE id = ? AND user_id = ?', [$formId, (int) $u['id']]) : null;
+$shopId = (int) ($_GET['shop'] ?? ($_POST['shop'] ?? 0));
+$shop = $shopId ? db_row('SELECT * FROM shops WHERE id = ? AND user_id = ?', [$shopId, (int) $u['id']]) : null;
 $err = null;
 $wa = (string) cfg('support_whatsapp');
 $cur = domain_cfg()['currency'];
-$plan = $form ? 'form' : 'premium';
+$plan = $shop ? 'shop' : ($form ? 'form' : 'premium');
 $years = max(1, min(3, (int) ($_POST['years'] ?? 1)));
 
-if (($link || $form) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+if (($link || $form || $shop) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     csrf_check();
     try {
         if (!billplz_enabled()) {
             throw new RuntimeException(t('up_offline'));
         }
-        $url = $form
-            ? start_form_checkout($u, $form, $years)
-            : start_premium_checkout($u, $link, (string) ($_POST['handle'] ?? ''), $years);
+        $url = $shop ? start_shop_checkout($u, $shop, $years)
+            : ($form ? start_form_checkout($u, $form, $years)
+            : start_premium_checkout($u, $link, (string) ($_POST['handle'] ?? ''), $years));
         redirect($url);
     } catch (InvalidArgumentException | RuntimeException $e) {
         $err = $e->getMessage();
@@ -41,16 +44,16 @@ if (($link || $form) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 $priceSen = premium_price_sen($plan);
 $rm = fn(int $y) => 'RM' . rtrim(rtrim(number_format($priceSen * $y / 100, 2), '0'), '.');
-$waText = 'Hi WSAP, I want to upgrade ' . ($form ? $form['domain'] . '/f/' . $form['slug'] : ($link ? short_display($link) : 'a link')) . '. Account: ' . $u['email'];
+$waText = 'Hi WSAP, I want to upgrade ' . ($shop ? shop_display($shop) : ($form ? $form['domain'] . '/f/' . $form['slug'] : ($link ? short_display($link) : 'a link'))) . '. Account: ' . $u['email'];
 
-page_start(['title' => $form ? t('fm_publish') : t('up_title'), 'noindex' => true, 'body_class' => 'page-app']);
+page_start(['title' => ($form || $shop) ? t('fm_publish') : t('up_title'), 'noindex' => true, 'body_class' => 'page-app']);
 ?>
 <section class="app wrap form-narrow">
-  <p><a href="<?= $form ? '/forms' : '/dashboard' ?>">← <?= e($form ? t('fm_title') : t('dash_title')) ?></a></p>
-  <div class="app-head"><h1><?= e($form ? t('fm_publish') : t('up_title')) ?></h1></div>
+  <p><a href="<?= $shop ? '/shops' : ($form ? '/forms' : '/dashboard') ?>">← <?= e($shop ? t('nav_tab_shops') : ($form ? t('fm_title') : t('dash_title'))) ?></a></p>
+  <div class="app-head"><h1><?= e(($form || $shop) ? t('fm_publish') : t('up_title')) ?></h1></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
 
-  <?php if (!$link && !$form): $links = user_links((int) $u['id']); $forms = user_forms((int) $u['id']); ?>
+  <?php if (!$link && !$form && !$shop): $links = user_links((int) $u['id']); $forms = user_forms((int) $u['id']); $shopsAll = user_shops((int) $u['id']); ?>
     <div class="card">
       <p><?= e(t('up_pick')) ?></p>
       <?php if (!$links && !$forms): ?><a class="btn btn-primary" href="/link"><?= e(t('dash_new')) ?></a><?php endif; ?>
@@ -63,17 +66,21 @@ page_start(['title' => $form ? t('fm_publish') : t('up_title'), 'noindex' => tru
         <div class="link-card"><div><div class="code"><?= e(form_display($f)) ?> <?= $pub ? '<span class="badge badge-prem">' . e(t('fm_published')) . '</span>' : '<span class="badge badge-off">' . e(t('fm_draft')) . '</span>' ?></div><div class="sub"><?= e($f['title']) ?></div></div>
           <a class="btn btn-sm <?= $pub ? 'btn-ghost' : 'btn-primary' ?>" href="/upgrade?form=<?= (int) $f['id'] ?>"><?= e($pub ? t('up_extend') : t('fm_publish')) ?></a></div>
         <?php endforeach; ?>
+        <?php foreach ($shopsAll as $sh): $pub = shop_is_published($sh, $u); ?>
+        <div class="link-card"><div><div class="code"><?= e(shop_display($sh)) ?> <?= $pub ? '<span class="badge badge-prem">' . e(t('fm_published')) . '</span>' : '<span class="badge badge-off">' . e(t('fm_draft')) . '</span>' ?></div><div class="sub"><?= e($sh['name']) ?></div></div>
+          <a class="btn btn-sm <?= $pub ? 'btn-ghost' : 'btn-primary' ?>" href="/upgrade?shop=<?= (int) $sh['id'] ?>"><?= e($pub ? t('up_extend') : t('fm_publish')) ?></a></div>
+        <?php endforeach; ?>
       </div>
     </div>
   <?php else:
-    $item = $form ?: $link;
-    $display = $form ? form_display($form) : short_display($link);
-    $prem = $form ? form_is_published($form, $u) : link_is_premium($link, $u);
-    $features = $form ? ['fm_feat_1', 'fm_feat_2', 'fm_feat_3', 'fm_feat_4'] : ['pr_prem_1', 'pr_prem_2', 'pr_prem_3', 'pr_prem_4', 'pr_prem_5', 'cmp_10'];
+    $item = $shop ?: ($form ?: $link);
+    $display = $shop ? shop_display($shop) : ($form ? form_display($form) : short_display($link));
+    $prem = $shop ? shop_is_published($shop, $u) : ($form ? form_is_published($form, $u) : link_is_premium($link, $u));
+    $features = $shop ? ['sh_feat_1', 'sh_feat_2', 'sh_feat_3', 'sh_feat_4'] : ($form ? ['fm_feat_1', 'fm_feat_2', 'fm_feat_3', 'fm_feat_4'] : ['pr_prem_1', 'pr_prem_2', 'pr_prem_3', 'pr_prem_4', 'pr_prem_5', 'cmp_10']);
   ?>
     <form method="post" class="card" novalidate>
-      <?= csrf_field() ?><?php if ($form): ?><input type="hidden" name="form" value="<?= (int) $form['id'] ?>"><?php else: ?><input type="hidden" name="id" value="<?= (int) $link['id'] ?>"><?php endif; ?>
-      <div class="field"><span class="label"><?= $form ? 'Form' : 'Link' ?></span><div class="result-link" style="font-size:20px"><?= e($display) ?></div>
+      <?= csrf_field() ?><?php if ($shop): ?><input type="hidden" name="shop" value="<?= (int) $shop['id'] ?>"><?php elseif ($form): ?><input type="hidden" name="form" value="<?= (int) $form['id'] ?>"><?php else: ?><input type="hidden" name="id" value="<?= (int) $link['id'] ?>"><?php endif; ?>
+      <div class="field"><span class="label"><?= $shop ? 'Shop' : ($form ? 'Form' : 'Link') ?></span><div class="result-link" style="font-size:20px"><?= e($display) ?></div>
         <?php if ($prem && !empty($item['premium_until'])): ?><p class="hint"><?= e(t('up_current_until', ['date' => substr((string) $item['premium_until'], 0, 10)])) ?></p><?php endif; ?></div>
 
       <?php if ($link && !(int) $link['is_custom']): ?>
