@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS links (
   title       TEXT NOT NULL DEFAULT '',
   is_custom   INTEGER NOT NULL DEFAULT 0,
   active      INTEGER NOT NULL DEFAULT 1,
+  premium_until TEXT NULL,
   clicks      INTEGER NOT NULL DEFAULT 0,
   session_key TEXT NULL,
   created_at  TEXT NOT NULL,
@@ -60,4 +61,18 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 CREATE TABLE IF NOT EXISTS settings (
   `key`   TEXT PRIMARY KEY,
   `value` TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS payments (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  link_id    INTEGER NULL REFERENCES links(id) ON DELETE SET NULL,
+  bill_id    TEXT NOT NULL UNIQUE,
+  provider   TEXT NOT NULL DEFAULT 'billplz',
+  amount     INTEGER NOT NULL,
+  currency   TEXT NOT NULL DEFAULT 'MYR',
+  status     TEXT NOT NULL DEFAULT 'pending',
+  handle     TEXT NOT NULL DEFAULT '',
+  years      INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  paid_at    TEXT NULL
 );

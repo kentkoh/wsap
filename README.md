@@ -31,7 +31,8 @@ db/schema.sqlite.sql       SQLite schema (local dev only)
 index.php                  homepage + free generator (POSTs to api/create.php)
 go.php                     /{code} redirect: logs click, OG tags for bots, in-app opener
 signup/login/logout/forgot/reset/verify.php, auth/google.php
-dashboard.php link.php analytics.php qr.php pricing.php terms.php privacy.php
+dashboard.php link.php analytics.php qr.php upgrade.php pricing.php terms.php privacy.php
+lib/premium.php lib/billplz.php  per-link Premium, Billplz API; payments/return.php + callback.php; cron.php
 admin/index.php            users (plan/role), links, settings — first registered user is admin
 dev/                       local server: php.ini, router.php, run.sh
 ```
@@ -69,6 +70,14 @@ cp config.local.example.php config.local.php && nano config.local.php   # DB pas
 6. Brevo: verify the sender `hello@wsap.me` (or change `brevo.from_email`).
 7. Turn OFF the hosting "One moment, please" bot-check for this domain (it blocks WhatsApp/FB previews and Google).
 
+## Billplz (Phase 2, per-link yearly Premium)
+
+1. Billplz → Settings: copy **API Secret Key** and **X Signature Key**; Billing → Collections: create "WSAP Premium" and copy its **Collection ID**.
+2. Put them in `config.local.php` under `billplz` (set `sandbox => true` while testing with billplz-sandbox.com keys).
+3. Checkout flow: `/upgrade?id=LINK` → Billplz bill → `payments/return.php` (customer) + `payments/callback.php` (server, X-Signature verified, bill re-fetched via API). Paid bills extend `links.premium_until` by 1–3 years and apply the requested custom handle.
+4. Daily cron (cPanel → Cron Jobs): `php /home/kuantan1/public_html/wsap.me/cron.php CRON_KEY` — expiry reminders (7 days before + on the day), re-sync pending bills, purge clicks older than 13 months. `cron_key` lives in config.local.php.
+5. Until Billplz keys are set, the upgrade page shows a WhatsApp button and admin can grant plans manually.
+
 ## Deploy (every update)
 
 ```bash
@@ -76,8 +85,14 @@ cd /home/kuantan1/public_html/wsap.me && git pull
 ```
 `git pull` never runs SQL — apply new `db/upgrade_*.sql` manually when the commit message says so.
 
+Installs created before Phase 2 (2026-10-22) need, once:
+
+```bash
+cd /home/kuantan1/public_html/wsap.me && mysql -u kuantan1_wsap -p kuantan1_wsap < db/upgrade_002_premium.sql
+```
+
 ## Roadmap
 
-- Phase 2: Billplz yearly checkout per link, Premium auto-expiry emails, styled QR server-side PNG.
+- Phase 2 (done): Billplz yearly checkout per link, expiry reminder emails, admin payments tab.
 - Phase 3 (Business): landing page before chat, multi-agent routing (hours / rotation / weighted),
   **Forms** (walink-style questionnaire that pre-fills the chat), Pixel/GA events, bio page.

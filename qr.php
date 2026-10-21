@@ -10,7 +10,7 @@ if (!$link) {
     http_response_code(404);
     exit('Not found');
 }
-$premium = is_premium($u);
+$premium = link_is_premium($link, $u);
 $url = short_url($link) . '?qr=1';
 
 page_start(['title' => t('qr_title') . ' · ' . short_display($link), 'noindex' => true, 'body_class' => 'page-app']);
@@ -22,7 +22,7 @@ page_start(['title' => t('qr_title') . ' · ' . short_display($link), 'noindex' 
     <div class="qr-stage"><div id="qr"></div></div>
     <div class="card">
       <p class="muted small"><?= e(t('qr_lead')) ?></p>
-      <?php if (!$premium): ?><div class="locked">🔒 <?= e(t('qr_premium')) ?> <a href="/pricing"><b><?= e(t('dash_upgrade')) ?> →</b></a></div><?php endif; ?>
+      <?php if (!$premium): ?><div class="locked">🔒 <?= e(t('qr_premium')) ?> <a href="/upgrade?id=<?= $id ?>"><b><?= e(t('dash_upgrade')) ?> →</b></a></div><?php endif; ?>
       <fieldset style="border:0;padding:0;margin:0" <?= $premium ? '' : 'disabled' ?>>
         <div class="field"><span class="label"><?= e(t('qr_style')) ?></span>
           <select class="select" id="qr-style"><option value="square">Square</option><option value="rounded">Rounded</option><option value="dots">Dots</option><option value="classy">Classy</option><option value="classy-rounded">Classy rounded</option><option value="extra-rounded">Extra rounded</option></select></div>

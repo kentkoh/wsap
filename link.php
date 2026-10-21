@@ -16,7 +16,8 @@ if ($id && !$link) {
 $err = null;
 $domains = array_keys(cfg('domains'));
 // Free links are frozen after creation (same rule as walink); Premium links are editable.
-$editable = !$link || $premium;
+$linkPremium = $link ? link_is_premium($link, $u) : false;
+$editable = !$link || $linkPremium;
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     csrf_check();
@@ -43,7 +44,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 }
                 $domain = in_array($_POST['domain'] ?? '', $domains, true) ? $_POST['domain'] : $link['domain'];
                 db_exec('UPDATE links SET phone = ?, message = ?, title = ?, domain = ?, active = ?, updated_at = ? WHERE id = ?',
-                    [$phone, $message, mb_substr(trim($title), 0, 80), $domain, $premium ? $active : 1, now(), (int) $link['id']]);
+                    [$phone, $message, mb_substr(trim($title), 0, 80), $domain, $linkPremium ? $active : 1, now(), (int) $link['id']]);
             } else {
                 db_exec('UPDATE links SET title = ?, updated_at = ? WHERE id = ?', [mb_substr(trim($title), 0, 80), now(), (int) $link['id']]);
             }
@@ -56,11 +57,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         }
         $phone = normalize_phone((string) ($_POST['cc'] ?? ''), (string) ($_POST['phone'] ?? ''));
         $opts = ['user_id' => (int) $u['id'], 'title' => $title, 'domain' => (string) ($_POST['domain'] ?? current_domain())];
-        if ($premium && trim((string) ($_POST['code'] ?? '')) !== '') {
-            $opts['code'] = (string) $_POST['code'];
+        $handle = strtolower(trim((string) ($_POST['code'] ?? '')));
+        if ($handle !== '') {
+            // Validate now so the user gets the error before the link exists.
+            if (!valid_custom_code($handle)) {
+                throw new InvalidArgumentException(t('err_code_invalid'));
+            }
+            if (db_value('SELECT 1 FROM links WHERE code = ?', [$handle])) {
+                throw new InvalidArgumentException(t('err_code_taken'));
+            }
+            if ($premium) {
+                $opts['code'] = $handle; // account-level plan (admin-granted): custom handle straight away
+            }
         }
         $new = create_link($phone, (string) ($_POST['message'] ?? ''), $opts);
         flash('ok', t('link_created'));
+        if ($handle !== '' && !$premium) {
+            // Branded handle is a per-link Premium purchase: go to checkout with the handle pre-filled.
+            redirect('/upgrade?id=' . (int) $new['id'] . '&handle=' . urlencode($handle));
+        }
         redirect('/qr?id=' . (int) $new['id']);
     } catch (InvalidArgumentException $e) {
         $err = $e->getMessage();
@@ -86,7 +101,7 @@ page_start(['title' => $link ? t('link_edit_title') : t('link_new_title'), 'noin
   <p><a href="/dashboard">← <?= e(t('dash_title')) ?></a></p>
   <div class="app-head"><h1><?= e($link ? t('link_edit_title') : t('link_new_title')) ?></h1></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= e($err) ?></div><?php endif; ?>
-  <?php if ($link && !$editable): ?><div class="locked">🔒 <?= e(t('link_free_locked')) ?> <a href="/pricing"><b><?= e(t('dash_upgrade')) ?> →</b></a></div><?php endif; ?>
+  <?php if ($link && !$editable): ?><div class="locked">🔒 <?= e(t('link_free_locked')) ?> <a href="/upgrade?id=<?= (int) $link['id'] ?>"><b><?= e(t('dash_upgrade')) ?> →</b></a></div><?php endif; ?>
 
   <form method="post" class="card" novalidate>
     <?= csrf_field() ?>
@@ -96,8 +111,8 @@ page_start(['title' => $link ? t('link_edit_title') : t('link_new_title'), 'noin
       <div class="field"><span class="label">Link</span><div class="result-link" style="font-size:20px"><?= e(short_display($link)) ?></div></div>
     <?php else: ?>
       <div class="field">
-        <label for="handle"><?= e(t('link_handle')) ?> <?php if (!$premium): ?><small><?= e(t('link_premium_only')) ?></small><?php endif; ?></label>
-        <div class="inline-prefix"><span><?= e(current_domain()) ?>/</span><input id="handle" name="code" maxlength="30" value="<?= $v('code') ?>" <?= $premium ? '' : 'disabled placeholder="' . e(random_code()) . '"' ?> pattern="[a-z0-9-]{3,30}"></div>
+        <label for="handle"><?= e(t('link_handle')) ?> <small><?= e(t('link_premium_only')) ?> · <?= e(price('premium')) ?>/<?= e(t('up_year')) ?></small></label>
+        <div class="inline-prefix"><span><?= e(current_domain()) ?>/</span><input id="handle" name="code" maxlength="30" value="<?= $v('code') ?>" placeholder="<?= e(t('up_handle_ph')) ?>" pattern="[a-z0-9-]{3,30}"></div>
         <p class="hint"><?= e($premium ? t('link_handle_hint') : t('link_handle_free')) ?></p>
       </div>
     <?php endif; ?>
@@ -130,7 +145,7 @@ page_start(['title' => $link ? t('link_edit_title') : t('link_new_title'), 'noin
         </div>
       </div>
       <?php endif; ?>
-      <?php if ($link && $premium): ?>
+      <?php if ($link && $linkPremium): ?>
       <div class="field"><label class="switch"><input type="checkbox" name="active" <?= (int) $link['active'] ? 'checked' : '' ?>> <?= e(t('link_active')) ?></label></div>
       <?php endif; ?>
     </fieldset>

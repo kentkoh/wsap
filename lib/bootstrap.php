@@ -329,3 +329,4 @@ function safe_url(string $url): string
 
 require_once WSAP_ROOT . '/lib/auth.php';
 require_once WSAP_ROOT . '/lib/links.php';
+require_once WSAP_ROOT . '/lib/premium.php';

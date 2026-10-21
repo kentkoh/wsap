@@ -10,7 +10,7 @@ if (!$link) {
     http_response_code(404);
     exit('Not found');
 }
-$premium = is_premium($u);
+$premium = link_is_premium($link, $u);
 $days = (int) ($_GET['days'] ?? 30);
 $days = in_array($days, [7, 30, 90, 365], true) ? $days : 30;
 
@@ -44,7 +44,7 @@ page_start(['title' => t('an_title') . ' · ' . short_display($link), 'noindex' 
 
   <?php if (!$premium): ?>
     <div class="stat-grid"><div class="stat"><b><?= number_format((int) $link['clicks']) ?></b><span><?= e(t('an_clicks')) ?></span></div></div>
-    <div class="locked">🔒 <?= e(t('an_free_note')) ?> <a href="/pricing"><b><?= e(t('dash_upgrade')) ?> →</b></a></div>
+    <div class="locked">🔒 <?= e(t('an_free_note')) ?> <a href="/upgrade?id=<?= $id ?>"><b><?= e(t('dash_upgrade')) ?> →</b></a></div>
   <?php else: ?>
     <div class="stat-grid">
       <div class="stat"><b><?= number_format($s['total']) ?></b><span><?= e(t('an_clicks')) ?> · <?= e(t('an_range', ['n' => $days])) ?></span></div>

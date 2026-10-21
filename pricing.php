@@ -6,9 +6,11 @@ require __DIR__ . '/lib/layout.php';
 $wa = (string) cfg('support_whatsapp');
 $cur = domain_cfg()['currency'];
 $u = current_user();
-$upgradeHref = $wa !== ''
-    ? 'https://wa.me/' . $wa . '?text=' . rawurlencode('Hi WSAP, I want to upgrade a link to Premium.' . ($u ? ' My account: ' . $u['email'] : ''))
-    : '/signup';
+require __DIR__ . '/lib/billplz.php';
+$upgradeHref = billplz_enabled()
+    ? '/upgrade'
+    : ($wa !== '' ? 'https://wa.me/' . $wa . '?text=' . rawurlencode('Hi WSAP, I want to upgrade a link to Premium.' . ($u ? ' My account: ' . $u['email'] : '')) : '/signup');
+$waitlistHref = $wa !== '' ? 'https://wa.me/' . $wa . '?text=' . rawurlencode('Hi WSAP, please add me to the Business plan waitlist.') : '/signup';
 
 page_start(['title' => t('nav_pricing'), 'description' => t('pr_lead')]);
 ?>
@@ -41,7 +43,7 @@ page_start(['title' => t('nav_pricing'), 'description' => t('pr_lead')]);
         <p class="desc"><?= e(t('pr_biz_d')) ?></p>
         <div class="amount"><?= e(price('business', $cur)) ?><small><?= e(t('pr_per_year')) ?></small></div>
         <ul><li><?= e(t('pr_biz_1')) ?></li><li><?= e(t('pr_biz_2')) ?></li><li><?= e(t('pr_biz_3')) ?></li><li><?= e(t('pr_biz_4')) ?></li></ul>
-        <a class="btn btn-ghost btn-lg" href="<?= e($upgradeHref) ?>" rel="noopener"><?= e(t('pr_cta_biz')) ?></a>
+        <a class="btn btn-ghost btn-lg" href="<?= e($waitlistHref) ?>" rel="noopener"><?= e(t('pr_cta_biz')) ?></a>
       </div>
     </div>
     <p class="pay-note"><?= e(t('pr_pay_note')) ?></p>

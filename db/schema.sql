@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS links (
   title       VARCHAR(80)  NOT NULL DEFAULT '',
   is_custom   TINYINT(1)   NOT NULL DEFAULT 0,
   active      TINYINT(1)   NOT NULL DEFAULT 1,
+  premium_until DATETIME   NULL,                         -- link-level Premium (per link, per year)
   clicks      INT UNSIGNED NOT NULL DEFAULT 0,            -- human clicks (bots excluded)
   session_key VARCHAR(32)  NULL,                          -- anonymous creator; cleared on claim
   created_at  DATETIME     NOT NULL,
@@ -71,4 +72,23 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 CREATE TABLE IF NOT EXISTS settings (
   `key`   VARCHAR(60) NOT NULL PRIMARY KEY,
   `value` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE IF NOT EXISTS payments (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT UNSIGNED NOT NULL,
+  link_id       INT UNSIGNED NULL,
+  bill_id       VARCHAR(40)  NOT NULL UNIQUE,
+  provider      VARCHAR(12)  NOT NULL DEFAULT 'billplz',
+  amount        INT UNSIGNED NOT NULL COMMENT 'sen',
+  currency      CHAR(3)      NOT NULL DEFAULT 'MYR',
+  status        VARCHAR(10)  NOT NULL DEFAULT 'pending',  -- pending | paid | failed
+  handle        VARCHAR(30)  NOT NULL DEFAULT '',          -- custom handle requested at checkout
+  years         TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  created_at    DATETIME     NOT NULL,
+  paid_at       DATETIME     NULL,
+  INDEX idx_pay_user (user_id),
+  CONSTRAINT fk_pay_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_pay_link FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

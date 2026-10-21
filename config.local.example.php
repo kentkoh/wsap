@@ -13,5 +13,7 @@ return [
   'ip_salt' => 'CHANGE_ME_random_string',
   'support_whatsapp' => '60123456789',
   'brevo'  => ['api_key' => 'xkeysib-...'],
+  'billplz' => ['api_key' => '', 'x_signature' => '', 'collection_id' => '', 'sandbox' => false],
+  'cron_key' => 'CHANGE_ME_random_string',
   'google' => ['client_id' => '....apps.googleusercontent.com', 'client_secret' => 'GOCSPX-...'],
 ];

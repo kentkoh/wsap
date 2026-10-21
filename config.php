@@ -40,6 +40,16 @@ return [
     'business' => ['name' => 'Business', 'usd' => 19, 'myr' => 79, 'max_links' => 1000],
   ],
 
+  // Billplz (https://www.billplz.com → Settings → Account → API Secret Key, X Signature Key; Billing → Collections)
+  'billplz' => [
+    'api_key'       => '',
+    'x_signature'   => '',
+    'collection_id' => '',
+    'sandbox'       => false,   // true = billplz-sandbox.com
+  ],
+  // Shared secret for cron.php?key=... (cPanel cron runs it daily)
+  'cron_key' => '',
+
   // Support WhatsApp (international format, digits only) shown in footer / upgrade.
   'support_whatsapp' => '',
 

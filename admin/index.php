@@ -30,6 +30,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         } elseif ($act === 'link_delete') {
             db_exec('DELETE FROM links WHERE id = ?', [(int) $_POST['lid']]);
             flash('ok', 'Link deleted.');
+        } elseif ($act === 'pay_sync') {
+            $r = sync_bill((string) ($_POST['bill'] ?? ''));
+            flash('ok', $r ? 'Payment confirmed and link upgraded.' : 'Still not paid according to Billplz.');
         } elseif ($act === 'setting') {
             foreach (['announcement'] as $k) {
                 set_setting($k, trim((string) ($_POST[$k] ?? '')));
@@ -62,7 +65,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
     <?php endforeach; ?>
   </div>
   <div class="tabs">
-    <?php foreach (['users' => 'Users', 'links' => 'Links', 'settings' => 'Settings'] as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="?tab=<?= $k ?>"><?= $l ?></a><?php endforeach; ?>
+    <?php foreach (['users' => 'Users', 'links' => 'Links', 'payments' => 'Payments', 'settings' => 'Settings'] as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="?tab=<?= $k ?>"><?= $l ?></a><?php endforeach; ?>
     <form method="get" style="margin-left:auto;display:flex;gap:6px"><input type="hidden" name="tab" value="<?= e($tab) ?>"><input class="input" name="q" value="<?= e($q) ?>" placeholder="Search email / code / phone" style="padding:8px 12px;font-size:14px;width:260px"><button class="btn btn-sm btn-ghost">Search</button></form>
   </div>
 
@@ -96,6 +99,23 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
       <td class="small"><?= $r['email'] ? e($r['email']) : '<i>anonymous</i>' ?></td><td><?= (int) $r['clicks'] ?></td><td class="small"><?= e(substr((string) $r['created_at'], 0, 10)) ?></td>
       <td style="white-space:nowrap"><form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="link_toggle"><input type="hidden" name="lid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-ghost"><?= (int) $r['active'] ? 'Pause' : 'Resume' ?></button></form>
         <form method="post" style="display:inline" data-confirm="Delete link <?= e($r['code']) ?>?"><?= csrf_field() ?><input type="hidden" name="act" value="link_delete"><input type="hidden" name="lid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-danger">Delete</button></form></td>
+    </tr>
+    <?php endforeach; ?>
+  </table></div>
+
+  <?php elseif ($tab === 'payments'): ?>
+  <?php $pays = db_rows('SELECT p.*, u.email, l.code, l.domain FROM payments p JOIN users u ON u.id = p.user_id LEFT JOIN links l ON l.id = p.link_id ' . ($q !== '' ? 'WHERE u.email LIKE ? OR p.bill_id LIKE ? OR l.code LIKE ? ' : '') . 'ORDER BY p.id DESC LIMIT 200', $q !== '' ? ["%$q%", "%$q%", "%$q%"] : []);
+        $revenue = (int) db_value('SELECT COALESCE(SUM(amount),0) FROM payments WHERE status = ?', ['paid']); ?>
+  <p class="muted small">Paid total: <b>RM<?= number_format($revenue / 100, 2) ?></b></p>
+  <div class="table-wrap"><table class="table">
+    <tr><th>#</th><th>Bill</th><th>User</th><th>Link</th><th>Amount</th><th>Years</th><th>Handle</th><th>Status</th><th>Created</th><th>Paid</th><th></th></tr>
+    <?php foreach ($pays as $r): ?>
+    <tr>
+      <td><?= (int) $r['id'] ?></td><td class="mono small"><?= e($r['bill_id']) ?></td><td class="small"><?= e($r['email']) ?></td>
+      <td class="mono"><?= $r['code'] ? e($r['domain'] . '/' . $r['code']) : '—' ?></td><td>RM<?= number_format($r['amount'] / 100, 2) ?></td><td><?= (int) $r['years'] ?></td>
+      <td class="mono small"><?= e($r['handle']) ?></td><td><span class="badge <?= $r['status'] === 'paid' ? 'badge-prem' : ($r['status'] === 'failed' ? 'badge-off' : '') ?>"><?= e($r['status']) ?></span></td>
+      <td class="small"><?= e(substr((string) $r['created_at'], 0, 16)) ?></td><td class="small"><?= e(substr((string) ($r['paid_at'] ?? ''), 0, 16)) ?></td>
+      <td><?php if ($r['status'] === 'pending'): ?><form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="pay_sync"><input type="hidden" name="bill" value="<?= e($r['bill_id']) ?>"><button class="btn btn-sm btn-ghost">Re-check</button></form><?php endif; ?></td>
     </tr>
     <?php endforeach; ?>
   </table></div>

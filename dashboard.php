@@ -20,7 +20,7 @@ page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page
   <div class="app-head">
     <h1><?= e(t('dash_title')) ?></h1>
     <span class="plan-chip"><?= e(t('dash_plan')) ?>: <b><?= e(plan_name($plan)) ?></b> · <?= e(t('dash_links_used', ['used' => count($links), 'max' => $max])) ?>
-      <?php if ($plan === 'free'): ?> · <a href="/pricing"><?= e(t('dash_upgrade')) ?></a><?php endif; ?></span>
+      <?php if ($plan === 'free'): ?> · <a href="/upgrade"><?= e(t('dash_upgrade')) ?></a><?php endif; ?></span>
     <?php if (($u['role'] ?? '') === ROLE_ADMIN): ?><a class="btn btn-ghost btn-sm" href="/admin" style="margin-left:auto">Admin</a><?php endif; ?>
     <a class="btn btn-primary" href="/link" <?= ($u['role'] ?? '') === ROLE_ADMIN ? 'style="margin-left:0"' : '' ?>>+ <?= e(t('dash_new')) ?></a>
     <form method="post" action="/logout" style="margin:0"><?= csrf_field() ?><button class="btn btn-ghost btn-sm" type="submit"><?= e(t('nav_logout')) ?></button></form>
@@ -33,8 +33,9 @@ page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page
     <?php foreach ($links as $l): ?>
     <article class="link-card">
       <div>
+        <?php $lp = link_is_premium($l, $u); ?>
         <div class="code"><a href="<?= e(short_url($l)) ?>" target="_blank" rel="noopener"><?= e(short_display($l)) ?></a>
-          <?php if ((int) $l['is_custom']): ?><span class="badge badge-prem"><?= e(t('dash_prem_badge')) ?></span><?php else: ?><span class="badge"><?= e(t('dash_free_badge')) ?></span><?php endif; ?>
+          <?php if ($lp): ?><span class="badge badge-prem" title="<?= !empty($l['premium_until']) ? e(t('dash_prem_until', ['date' => substr((string) $l['premium_until'], 0, 10)])) : '' ?>"><?= e(t('dash_prem_badge')) ?><?= !empty($l['premium_until']) ? ' · ' . e(substr((string) $l['premium_until'], 0, 10)) : '' ?></span><?php else: ?><span class="badge"><?= e(t('dash_free_badge')) ?></span><?php endif; ?>
           <?php if (!(int) $l['active']): ?><span class="badge badge-off"><?= e(t('dash_paused')) ?></span><?php endif; ?>
         </div>
         <div class="sub">
@@ -50,6 +51,8 @@ page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page
         <a class="btn btn-sm btn-ghost" href="/qr?id=<?= (int) $l['id'] ?>"><?= e(t('dash_qr')) ?></a>
         <a class="btn btn-sm btn-ghost" href="/analytics?id=<?= (int) $l['id'] ?>"><?= e(t('dash_stats')) ?></a>
         <a class="btn btn-sm btn-ghost" href="/link?id=<?= (int) $l['id'] ?>"><?= e(t('dash_edit')) ?></a>
+        <?php if (!$lp): ?><a class="btn btn-sm btn-primary" href="/upgrade?id=<?= (int) $l['id'] ?>">★ <?= e(t('dash_upgrade')) ?></a>
+        <?php elseif (!empty($l['premium_until'])): ?><a class="btn btn-sm btn-ghost" href="/upgrade?id=<?= (int) $l['id'] ?>"><?= e(t('dash_extend')) ?></a><?php endif; ?>
       </div>
     </article>
     <?php endforeach; ?>
