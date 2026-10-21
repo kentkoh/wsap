@@ -245,3 +245,9 @@ CREATE TABLE IF NOT EXISTS premium_slugs (
   created_at       DATETIME     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- seed of generic words: db/upgrade_007_premium_slugs.sql
+
+CREATE TABLE IF NOT EXISTS geo_cache (
+  ip_hash    CHAR(32) NOT NULL PRIMARY KEY,
+  country    CHAR(2)  NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -17,7 +17,7 @@ if (!$link) {
 }
 $premium = link_has_smart($link, $u);
 $linkPremium = link_is_premium($link, $u);
-$maxDest = (int) (setting('smart_max_destinations') ?: 10);
+$maxDest = (int) setting('smart_max_destinations'); // 0 = unlimited (admin may set a cap in settings)
 $err = null;
 $editing = null;
 
@@ -64,7 +64,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 db_exec('UPDATE destinations SET name = ?, phone = ?, message = ?, rule_type = ?, rule = ?, weight = ?, active = ? WHERE id = ? AND link_id = ?',
                     [$name, $phone, $message, $type, json_encode($rule), $weight, $active, $did, $id]);
             } else {
-                if (count(link_destinations($id)) >= $maxDest) {
+                if ($maxDest > 0 && count(link_destinations($id)) >= $maxDest) {
                     throw new InvalidArgumentException(t('sm_err_max', ['n' => $maxDest]));
                 }
                 $sort = (int) db_value('SELECT COALESCE(MAX(sort), -1) + 1 FROM destinations WHERE link_id = ?', [$id]);

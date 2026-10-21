@@ -64,7 +64,7 @@ try {
     // Smart routing only while the link is Premium; otherwise the link's own number is used.
     $owner = $link['user_id'] ? db_row('SELECT * FROM users WHERE id = ?', [(int) $link['user_id']]) : null;
     if (($link['type'] ?? 'chat') === 'smart' && link_has_smart($link, $owner)) {
-        $dest = resolve_destination($link, ['country' => $info['country'], 'referrer' => $info['referrer'], 'is_qr' => $info['is_qr'], 'now' => time()]);
+        $dest = resolve_destination($link, ['country' => $info['country'], 'referrer' => $info['referrer'], 'is_qr' => $info['is_qr'], 'utm_source' => $info['utm_source'], 'now' => time()]);
     }
 } catch (Throwable $e) {
     error_log('smart route: ' . $e->getMessage());

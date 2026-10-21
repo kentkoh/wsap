@@ -125,3 +125,6 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS premium_slugs (
   slug TEXT PRIMARY KEY, price_myr INTEGER NOT NULL DEFAULT 299, assigned_user_id INTEGER NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS geo_cache (
+  ip_hash TEXT PRIMARY KEY, country TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+);

@@ -92,7 +92,9 @@ Smart Links: destinations with rules (always/weighted, business hours + timezone
 
 Shops: categories, photos (uploaded to `assets/uploads`, re-encoded to WebP, PHP execution blocked), option groups with price extras (`Size: S, M, L (+2)`; `*` = multi-select), delivery methods, coupons, configurable checkout fields, open/closed switch, orders with statuses + 30-day metrics + CSV. Payment is arranged in WhatsApp (same as walink).
 
-Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`, `db/upgrade_005_shops.sql`, `db/upgrade_006_shop_categories.sql`, `db/upgrade_007_premium_slugs.sql` (seeds ~200 generic words as premium handles), `db/upgrade_008_demo.sql`, `db/upgrade_009_smart_addon.sql`.
+Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql`, `db/upgrade_003_smart.sql`, `db/upgrade_004_forms.sql`, `db/upgrade_005_shops.sql`, `db/upgrade_006_shop_categories.sql`, `db/upgrade_007_premium_slugs.sql` (seeds ~200 generic words as premium handles), `db/upgrade_008_demo.sql`, `db/upgrade_009_smart_addon.sql`, `db/upgrade_010_geo_cache.sql`.
+
+Smart Link country rules need the visitor country: CDN header (Cloudflare `CF-IPCountry`) when present, otherwise `lib/geoip.php` looks it up via ipwho.is (2 s timeout) only for links that have a country rule, cached 24 h in `geo_cache` by salted IP hash. Source rules read the referrer and `?utm_source=`. Destinations per link are unlimited unless admin sets `smart_max_destinations` in settings.
 
 Handle policy (`lib/blocklist.php`): min length (admin), reserved words, trademarks, EN/BM profanity, admin extra words, and **premium handles** (`premium_slugs` table: generic words sold for a one-time fee; refused unless assigned to the account). Buying is automatic: the refusal shows a **Buy this handle** button → `/upgrade?handle=word` → Billplz one-time fee → on payment the word is assigned to the buyer. On the link upgrade page a premium handle simply adds its fee to the yearly bill. Admin → Premium handles can also assign/release manually.
 

@@ -56,11 +56,25 @@ function rule_matches(array $d, array $ctx): bool
     return false;
 }
 
-/** Normalise referrer into one of SMART_SOURCES. */
+/** Normalise referrer (or an explicit utm_source) into one of SMART_SOURCES. */
 function source_of(array $ctx): string
 {
     if (!empty($ctx['is_qr'])) {
         return 'qr';
+    }
+    $utm = strtolower((string) ($ctx['utm_source'] ?? ''));
+    if ($utm !== '') {
+        foreach (SMART_SOURCES as $s) {
+            if ($utm === $s || str_contains($utm, $s)) {
+                return $s;
+            }
+        }
+        if (str_contains($utm, 'ig')) {
+            return 'instagram';
+        }
+        if (str_contains($utm, 'fb')) {
+            return 'facebook';
+        }
     }
     $ref = strtolower((string) ($ctx['referrer'] ?? ''));
     if ($ref === '' || $ref === 'direct') {
@@ -92,6 +106,16 @@ function resolve_destination(array $link, array $ctx): ?array
     $dests = link_destinations((int) $link['id'], true);
     if (!$dests) {
         return null;
+    }
+    // Country is only looked up (and only then may cost a network call) when a country rule exists.
+    if (($ctx['country'] ?? '') === '') {
+        foreach ($dests as $d) {
+            if ($d['rule_type'] === 'country') {
+                require_once WSAP_ROOT . '/lib/geoip.php';
+                $ctx['country'] = visitor_country(true);
+                break;
+            }
+        }
     }
     $catchAll = [];
     foreach ($dests as $d) {

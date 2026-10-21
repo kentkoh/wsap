@@ -109,13 +109,7 @@ function referrer_host(?string $ref): string
 /** Country from Cloudflare / LiteSpeed / nginx GeoIP headers when available. */
 function request_country(): string
 {
-    foreach (['HTTP_CF_IPCOUNTRY', 'GEOIP_COUNTRY_CODE', 'HTTP_X_COUNTRY_CODE'] as $k) {
-        $v = strtoupper(trim((string) ($_SERVER[$k] ?? '')));
-        if (preg_match('/^[A-Z]{2}$/', $v)) {
-            return $v;
-        }
-    }
-    return '';
+    return request_country_header();
 }
 
 function click_info(): array
