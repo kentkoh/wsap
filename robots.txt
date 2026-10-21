@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /link
+Disallow: /analytics
+Disallow: /qr
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /login
+Disallow: /signup
+Sitemap: https://wsap.me/sitemap.xml

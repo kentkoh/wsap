@@ -1,0 +1,9 @@
+config.local.php
+_old/
+dev/*.sqlite
+dev/*.sqlite-journal
+*.log
+.playwright-mcp/
+Thumbs.db
+desktop.ini
+node_modules/

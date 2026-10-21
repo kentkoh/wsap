@@ -1,0 +1,74 @@
+-- WSAP — MySQL schema. Apply once:  mysql -u kuantan1_wsap -p kuantan1_wsap < db/schema.sql
+-- All timestamps are UTC "Y-m-d H:i:s" strings written by PHP (now()).
+SET NAMES utf8mb4;
+
+CREATE TABLE IF NOT EXISTS users (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  email         VARCHAR(190) NOT NULL UNIQUE,
+  name          VARCHAR(80)  NOT NULL DEFAULT '',
+  password_hash VARCHAR(255) NULL,
+  google_sub    VARCHAR(64)  NULL UNIQUE,
+  role          VARCHAR(10)  NOT NULL DEFAULT 'user',      -- user | admin
+  plan          VARCHAR(12)  NOT NULL DEFAULT 'free',      -- free | premium | business
+  plan_until    DATETIME     NULL,
+  verified_at   DATETIME     NULL,
+  created_at    DATETIME     NOT NULL,
+  last_login_at DATETIME     NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS links (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  code        VARCHAR(30)  NOT NULL UNIQUE,
+  domain      VARCHAR(40)  NOT NULL DEFAULT 'wsap.me',    -- display domain; every domain resolves every code
+  user_id     INT UNSIGNED NULL,
+  phone       VARCHAR(16)  NOT NULL,                      -- digits only, E.164 without +
+  message     TEXT         NOT NULL,
+  title       VARCHAR(80)  NOT NULL DEFAULT '',
+  is_custom   TINYINT(1)   NOT NULL DEFAULT 0,
+  active      TINYINT(1)   NOT NULL DEFAULT 1,
+  clicks      INT UNSIGNED NOT NULL DEFAULT 0,            -- human clicks (bots excluded)
+  session_key VARCHAR(32)  NULL,                          -- anonymous creator; cleared on claim
+  created_at  DATETIME     NOT NULL,
+  updated_at  DATETIME     NOT NULL,
+  INDEX idx_links_user (user_id),
+  INDEX idx_links_session (session_key),
+  CONSTRAINT fk_links_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS clicks (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  link_id    INT UNSIGNED NOT NULL,
+  created_at DATETIME    NOT NULL,
+  ip_hash    CHAR(32)    NOT NULL DEFAULT '',
+  country    CHAR(2)     NOT NULL DEFAULT '',
+  referrer   VARCHAR(60) NOT NULL DEFAULT 'direct',
+  device     VARCHAR(10) NOT NULL DEFAULT '',
+  os         VARCHAR(12) NOT NULL DEFAULT '',
+  browser    VARCHAR(20) NOT NULL DEFAULT '',
+  is_bot     TINYINT(1)  NOT NULL DEFAULT 0,
+  is_qr      TINYINT(1)  NOT NULL DEFAULT 0,
+  utm_source VARCHAR(40) NOT NULL DEFAULT '',
+  INDEX idx_clicks_link_time (link_id, created_at),
+  CONSTRAINT fk_clicks_link FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tokens (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT UNSIGNED NOT NULL,
+  purpose    VARCHAR(10)  NOT NULL,                       -- verify | reset
+  token_hash CHAR(64)     NOT NULL UNIQUE,
+  expires_at DATETIME     NOT NULL,
+  created_at DATETIME     NOT NULL,
+  CONSTRAINT fk_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+  `key`        VARCHAR(80) NOT NULL PRIMARY KEY,
+  hits         INT UNSIGNED NOT NULL DEFAULT 1,
+  window_start DATETIME    NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS settings (
+  `key`   VARCHAR(60) NOT NULL PRIMARY KEY,
+  `value` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

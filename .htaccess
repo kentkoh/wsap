@@ -1,0 +1,56 @@
+Options -Indexes
+DirectoryIndex index.php
+AddDefaultCharset utf-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # https only; strip www (both wsap.me and wsap.my serve this docroot)
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+  # Never expose .php in URLs: /login → login.php (only when that file exists)
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+  RewriteRule ^([a-z0-9/_-]+)/?$ $1.php [L]
+
+  # Short links: wsap.me/abc123  (anything that is not a real file/dir)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^([A-Za-z0-9-]{3,30})/?$ go.php?c=$1 [L,QSA]
+</IfModule>
+
+# Block source folders and sensitive files from the web
+RedirectMatch 404 ^/\.git
+RedirectMatch 404 ^/(db|lib|lang|dev|_old)(/|$)
+<FilesMatch "^(config\.php|config\.local\.php|config\.local\.example\.php|README\.md)$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "\.(md|sql|log|sqlite|ini|sh)$">
+  Require all denied
+</FilesMatch>
+<Files "robots.txt">
+  Require all granted
+</Files>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+</IfModule>
+
+php_flag display_errors Off
