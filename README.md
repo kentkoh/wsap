@@ -95,6 +95,10 @@ Upgrades to run once per existing install, in order: `db/upgrade_002_premium.sql
 
 Handle policy (`lib/blocklist.php`): min length (admin), reserved words, trademarks, EN/BM profanity, admin extra words, and **premium handles** (`premium_slugs` table: generic words sold for a one-time fee; refused unless assigned to the account). Buying is automatic: the refusal shows a **Buy this handle** button → `/upgrade?handle=word` → Billplz one-time fee → on payment the word is assigned to the buyer. On the link upgrade page a premium handle simply adds its fee to the yearly bill. Admin → Premium handles can also assign/release manually.
 
+## Homepage
+
+Sections (index.php, graphics in `lib/home_graphics.php`): hero + free generator → **How a WhatsApp link works** (tabs Links / Smart / Forms / Shops with numbered steps and an animated phone that taps the link and opens the chat, scenes cycle with the steps) → **Where to use** (9 illustrated tiles) → **Products** (4 animated flow diagrams: Premium Links, Smart Links, Forms, Shops) → Free vs Premium table → FAQ → CTA. Animations are CSS keyframes + a small scene loop; respects prefers-reduced-motion.
+
 ## Product pages & demos
 
 - `/premium-links`, `/whatsapp-forms`, `/whatsapp-shop` — marketing pages. The shop page has six live feature mocks with Read-more modals, a tabbed dashboard tour using real screenshots in `assets/img/shop/*.webp` (regenerate: seed `dev/seed_dev.php`, screenshot with Playwright at 1280×860, convert with sharp), a comparison table and FAQ. Prices on all pages come from `price()` so admin changes apply instantly. Linked from the **Products** dropdown in the header, the homepage product row and the footer.
