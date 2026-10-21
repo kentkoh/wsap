@@ -15,3 +15,8 @@ dev/server.log
 assets/uploads/*
 !assets/uploads/.htaccess
 !assets/uploads/.gitkeep
+
+# cPanel per-folder PHP error logs
+error_log
+**/error_log
+config.local.php.bak
