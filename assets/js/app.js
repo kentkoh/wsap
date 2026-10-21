@@ -13,6 +13,16 @@
     });
   }
 
+  // ---- products dropdown: tap/click toggles (touch, keyboard, mobile menu); hover still works on desktop
+  $$('.nav-dd > a').forEach((a) => {
+    a.addEventListener('click', (ev) => {
+      const dd = a.parentElement;
+      const coarse = window.matchMedia('(hover: none)').matches || window.innerWidth <= 860;
+      if (coarse || !dd.classList.contains('open')) { ev.preventDefault(); dd.classList.toggle('open'); }
+    });
+  });
+  document.addEventListener('click', (ev) => { if (!ev.target.closest('.nav-dd')) $$('.nav-dd.open').forEach((d) => d.classList.remove('open')); });
+
   // ---- reveal on scroll (only hidden when JS runs, so content is never lost)
   document.body.classList.add('js');
   if ('IntersectionObserver' in window) {
