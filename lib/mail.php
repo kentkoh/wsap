@@ -31,20 +31,10 @@ function send_mail(string $toEmail, string $toName, string $subject, string $htm
         'htmlContent' => $html,
         'textContent' => $text,
     ];
-    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 15,
-        CURLOPT_HTTPHEADER     => ['accept: application/json', 'content-type: application/json', 'api-key: ' . $key],
-        CURLOPT_POSTFIELDS     => json_encode($payload),
-    ]);
-    $body = curl_exec($ch);
-    $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    $err = curl_error($ch);
-    curl_close($ch);
-    if ($status < 200 || $status >= 300) {
-        error_log("Brevo send failed ($status): $err $body");
+    require_once WSAP_ROOT . '/lib/http.php';
+    $r = http_post_json('https://api.brevo.com/v3/smtp/email', $payload, ['headers' => ['api-key: ' . $key]]);
+    if ($r['status'] < 200 || $r['status'] >= 300) {
+        error_log("Brevo send failed ({$r['status']}): {$r['error']} {$r['body']}");
         return false;
     }
     return true;

@@ -35,21 +35,15 @@ if (!hash_equals($_SESSION['g_state'] ?? '', (string) ($_GET['state'] ?? ''))) {
 }
 unset($_SESSION['g_state']);
 
-$ch = curl_init('https://oauth2.googleapis.com/token');
-curl_setopt_array($ch, [
-    CURLOPT_POST           => true,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_TIMEOUT        => 15,
-    CURLOPT_POSTFIELDS     => http_build_query([
-        'code'          => (string) $_GET['code'],
-        'client_id'     => $clientId,
-        'client_secret' => $secret,
-        'redirect_uri'  => $redirectUri,
-        'grant_type'    => 'authorization_code',
-    ]),
+require WSAP_ROOT . '/lib/http.php';
+$tokRes = http_post_form('https://oauth2.googleapis.com/token', [
+    'code'          => (string) $_GET['code'],
+    'client_id'     => $clientId,
+    'client_secret' => $secret,
+    'redirect_uri'  => $redirectUri,
+    'grant_type'    => 'authorization_code',
 ]);
-$tok = json_decode((string) curl_exec($ch), true);
-curl_close($ch);
+$tok = json_decode($tokRes['body'], true);
 $idToken = $tok['id_token'] ?? null;
 if (!is_string($idToken)) {
     error_log('google token: ' . json_encode($tok));
@@ -58,10 +52,8 @@ if (!is_string($idToken)) {
 }
 
 // Validate the id_token with Google's tokeninfo endpoint (simple, no JWKS handling needed).
-$ch = curl_init('https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($idToken));
-curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15]);
-$info = json_decode((string) curl_exec($ch), true);
-curl_close($ch);
+$infoRes = http_request('https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($idToken));
+$info = json_decode($infoRes['body'], true);
 
 if (!is_array($info) || ($info['aud'] ?? '') !== $clientId || empty($info['sub']) || empty($info['email']) || ($info['email_verified'] ?? 'false') !== 'true') {
     error_log('google tokeninfo: ' . json_encode($info));

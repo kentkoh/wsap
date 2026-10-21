@@ -32,7 +32,7 @@ if ($link && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $err = $e->getMessage();
     } catch (Throwable $e) {
         error_log('upgrade: ' . $e->getMessage());
-        $err = t('err_generic');
+        $err = t('err_generic') . (cfg('env') === 'development' ? ' (' . $e->getMessage() . ')' : '');
     }
 }
 

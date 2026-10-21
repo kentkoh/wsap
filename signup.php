@@ -20,7 +20,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         try {
             $user = register_user($email, (string) ($_POST['password'] ?? ''), $name);
             login_user($user);
-            send_verification_email($user);
+            try {
+                send_verification_email($user); // a mail outage must never block signup
+            } catch (Throwable $e) {
+                error_log('verification mail: ' . $e->getMessage());
+            }
             flash('ok', t('auth_welcome'));
             redirect(after_login_url());
         } catch (InvalidArgumentException $e) {

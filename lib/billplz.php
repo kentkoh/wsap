@@ -18,25 +18,15 @@ function billplz_base(): string
 
 function billplz_request(string $method, string $path, array $data = []): array
 {
-    $ch = curl_init(billplz_base() . $path);
-    $opts = [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 20,
-        CURLOPT_USERPWD        => cfg('billplz.api_key') . ':',
-    ];
-    if ($method === 'POST') {
-        $opts[CURLOPT_POST] = true;
-        $opts[CURLOPT_POSTFIELDS] = http_build_query($data);
-    }
-    curl_setopt_array($ch, $opts);
-    $body = (string) curl_exec($ch);
-    $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    $err = curl_error($ch);
-    curl_close($ch);
-    $json = json_decode($body, true);
-    if ($status < 200 || $status >= 300 || !is_array($json)) {
-        error_log("Billplz $method $path failed ($status): $err $body");
-        throw new RuntimeException('Payment provider error');
+    require_once WSAP_ROOT . '/lib/http.php';
+    $opts = ['basic_auth' => cfg('billplz.api_key') . ':', 'timeout' => 20];
+    $r = $method === 'POST'
+        ? http_post_form(billplz_base() . $path, $data, $opts)
+        : http_request(billplz_base() . $path, $opts);
+    $json = json_decode($r['body'], true);
+    if ($r['status'] < 200 || $r['status'] >= 300 || !is_array($json)) {
+        error_log("Billplz $method $path failed ({$r['status']}): {$r['error']} {$r['body']}");
+        throw new RuntimeException('Payment provider error (' . ($r['status'] ?: 'no response') . ')');
     }
     return $json;
 }
