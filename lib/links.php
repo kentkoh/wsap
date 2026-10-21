@@ -20,6 +20,31 @@ const RESERVED_CODES = [
     'upgrade', 'checkout', 'billplz', 'webhook', 'webhooks', 'static', 'img', 'css', 'js', 'uploads',
 ];
 
+/**
+ * Links, forms and shops share one namespace (wsap.me/slug). True when the slug is used by any of them.
+ * $except = ['links'|'forms'|'shops', id] ignores that row (editing).
+ */
+function slug_taken(string $slug, array $except = []): bool
+{
+    $slug = strtolower($slug);
+    foreach (['links' => 'code', 'forms' => 'slug', 'shops' => 'slug'] as $table => $col) {
+        $sql = "SELECT 1 FROM $table WHERE $col = ?";
+        $p = [$slug];
+        if ($except && $except[0] === $table) {
+            $sql .= ' AND id <> ?';
+            $p[] = (int) $except[1];
+        }
+        try {
+            if (db_value($sql, $p)) {
+                return true;
+            }
+        } catch (Throwable $e) {
+            // table may not exist yet on an install that has not run the upgrade
+        }
+    }
+    return false;
+}
+
 function random_code(): string
 {
     $alphabet = cfg('code_alphabet');
@@ -37,7 +62,7 @@ function unique_code(): string
 {
     for ($i = 0; $i < 20; $i++) {
         $c = random_code();
-        if (!in_array($c, RESERVED_CODES, true) && !db_value('SELECT 1 FROM links WHERE code = ?', [$c])) {
+        if (!in_array($c, RESERVED_CODES, true) && !slug_taken($c)) {
             return $c;
         }
     }
@@ -104,7 +129,7 @@ function create_link(string $phone, string $message, array $opts = []): array
         if (!valid_custom_code($code)) {
             throw new InvalidArgumentException(t('err_code_invalid'));
         }
-        if (db_value('SELECT 1 FROM links WHERE code = ?', [$code])) {
+        if (slug_taken($code)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
     } else {

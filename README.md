@@ -40,7 +40,7 @@ dev/                       local server: php.ini, router.php, run.sh
 ## URL rules (.htaccess)
 
 - `/login` → `login.php` (no `.php` in URLs), `/admin` → `admin/index.php`
-- anything else `[A-Za-z0-9-]{3,30}` → `go.php?c=…`  (short links live at the root, no `/go/`)
+- anything else `[A-Za-z0-9-]{3,30}` → `go.php?c=…` which resolves a link, then a form, then a shop (one shared namespace; `slug_taken()` enforces uniqueness). Old `/f/slug` and `/s/slug` redirect 301.
 - Free codes: 6 chars from `abcdefghjkmnpqrstuvwxyz23456789` (no look-alikes) ≈ 887M combos.
 - Custom handles (Premium): 3–30 chars `a-z 0-9 -`, reserved words in `lib/links.php`.
 
@@ -84,8 +84,8 @@ cp config.local.example.php config.local.php && nano config.local.php   # DB pas
 |---|---|---|
 | Free link | `wsap.me/abc123` | free, never expires, not editable |
 | Premium link | `wsap.me/yourbrand` | per link / year — edit, analytics, styled QR, **Smart Link** routing (`/smart?id=`) |
-| Form | `wsap.me/f/slug` | per form / year — builder `/form`, inbox `/responses`, public page `form_view.php` |
-| Shop | `wsap.me/s/slug` | per shop / year — settings `/shop`, products `/products`, orders `/orders`, public page `shop_view.php`, cart → `api/shop_order.php` |
+| Form | `wsap.me/slug` | per form / year — builder `/form`, inbox `/responses`, public page `form_view.php` |
+| Shop | `wsap.me/slug` | per shop / year — settings `/shop`, products `/products`, orders `/orders`, public page `shop_view.php`, cart → `api/shop_order.php` |
 
 Smart Links: destinations with rules (always/weighted, business hours + timezone, country, traffic source); first matching rule wins, catch-all split by weight; routing only while the link is Premium. Forms: up to 20 questions of 11 types, step or single page, answers composed into the first WhatsApp message, optional saved responses + CSV, funnel counters.
 

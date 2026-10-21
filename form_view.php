@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
-/** /f/{slug} — public form page. POST submits answers and redirects to WhatsApp. */
-require __DIR__ . '/lib/bootstrap.php';
-require __DIR__ . '/lib/forms.php';
-require __DIR__ . '/lib/ua.php';
+/** wsap.me/{slug} (via go.php) — public form page. POST submits answers and redirects to WhatsApp. */
+require_once __DIR__ . '/lib/bootstrap.php';
+require_once __DIR__ . '/lib/forms.php';
+require_once __DIR__ . '/lib/ua.php';
 
 header('Cache-Control: no-store');
 $form = find_form((string) ($_GET['s'] ?? ''));

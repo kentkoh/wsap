@@ -4,8 +4,8 @@ declare(strict_types=1);
  * /{code} → WhatsApp. Logs the click, serves OG tags to link-preview bots,
  * and shows a one-tap page inside in-app browsers that block wa.me.
  */
-require __DIR__ . '/lib/bootstrap.php';
-require __DIR__ . '/lib/ua.php';
+require_once __DIR__ . '/lib/bootstrap.php';
+require_once __DIR__ . '/lib/ua.php';
 
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex');
@@ -33,6 +33,23 @@ function go_page(string $title, string $lead, string $buttonHtml, string $extra 
 }
 
 if (!$link) {
+    // Forms and shops share the root namespace: wsap.me/slug
+    try {
+        require_once __DIR__ . '/lib/forms.php';
+        if (find_form($code)) {
+            $_GET['s'] = $code;
+            require __DIR__ . '/form_view.php';
+            exit;
+        }
+        require_once __DIR__ . '/lib/shops.php';
+        if (find_shop($code)) {
+            $_GET['s'] = $code;
+            require __DIR__ . '/shop_view.php';
+            exit;
+        }
+    } catch (Throwable $e) {
+        error_log('go form/shop: ' . $e->getMessage());
+    }
     http_response_code(404);
     go_page(t('not_found_t'), t('not_found_d'), '<a class="btn btn-primary" href="/">' . e(t('make_own')) . '</a>');
 }

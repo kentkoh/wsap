@@ -32,7 +32,7 @@ function start_premium_checkout(array $user, array $link, string $handle = '', i
         if (!valid_custom_code($handle)) {
             throw new InvalidArgumentException(t('err_code_invalid'));
         }
-        if ($handle !== $link['code'] && db_value('SELECT 1 FROM links WHERE code = ?', [$handle])) {
+        if ($handle !== $link['code'] && slug_taken($handle)) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
     } else {
@@ -44,13 +44,13 @@ function start_premium_checkout(array $user, array $link, string $handle = '', i
 /** Start a checkout for a form (plan 'form', per form per year). */
 function start_form_checkout(array $user, array $form, int $years = 1): string
 {
-    return start_checkout($user, 'form', (int) $form['id'], 'form', 'WSAP Form ' . $form['domain'] . '/f/' . $form['slug'], $years);
+    return start_checkout($user, 'form', (int) $form['id'], 'form', 'WSAP Form ' . $form['domain'] . '/' . $form['slug'], $years);
 }
 
 /** Start a checkout for a shop (plan 'shop', per shop per year). */
 function start_shop_checkout(array $user, array $shop, int $years = 1): string
 {
-    return start_checkout($user, 'shop', (int) $shop['id'], 'shop', 'WSAP Shop ' . $shop['domain'] . '/s/' . $shop['slug'], $years);
+    return start_checkout($user, 'shop', (int) $shop['id'], 'shop', 'WSAP Shop ' . $shop['domain'] . '/' . $shop['slug'], $years);
 }
 
 /** Generic: pending payment row + Billplz bill. Returns the bill URL. */
@@ -101,7 +101,7 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
             $code = $link['code'];
             $custom = (int) $link['is_custom'];
             if ($p['handle'] !== '' && !$custom && valid_custom_code($p['handle'])
-                && !db_value('SELECT 1 FROM links WHERE code = ? AND id <> ?', [$p['handle'], $itemId])) {
+                && !slug_taken($p['handle'], ['links', $itemId])) {
                 $code = $p['handle'];
                 $custom = 1;
             }
@@ -114,14 +114,14 @@ function apply_paid_bill(string $billId, ?string $paidAt = null): ?array
         if ($form) {
             $until = extend_until($form['premium_until'] ?? null, (int) $p['years']);
             db_exec('UPDATE forms SET premium_until = ?, active = 1, updated_at = ? WHERE id = ?', [$until, now(), $itemId]);
-            $label = $form['domain'] . '/f/' . $form['slug'];
+            $label = $form['domain'] . '/' . $form['slug'];
         }
     } elseif ($type === 'shop' && $itemId) {
         $shop = db_row('SELECT * FROM shops WHERE id = ?', [$itemId]);
         if ($shop) {
             $until = extend_until($shop['premium_until'] ?? null, (int) $p['years']);
             db_exec('UPDATE shops SET premium_until = ?, active = 1, updated_at = ? WHERE id = ?', [$until, now(), $itemId]);
-            $label = $shop['domain'] . '/s/' . $shop['slug'];
+            $label = $shop['domain'] . '/' . $shop['slug'];
         }
     }
     try {

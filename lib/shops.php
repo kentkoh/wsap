@@ -50,12 +50,12 @@ function shop_is_published(array $shop, ?array $owner = null): bool
 
 function shop_url(array $shop): string
 {
-    return cfg('env') === 'development' ? base_url() . '/s/' . $shop['slug'] : 'https://' . $shop['domain'] . '/s/' . $shop['slug'];
+    return cfg('env') === 'development' ? base_url() . '/' . $shop['slug'] : 'https://' . $shop['domain'] . '/' . $shop['slug'];
 }
 
 function shop_display(array $shop): string
 {
-    return $shop['domain'] . '/s/' . $shop['slug'];
+    return $shop['domain'] . '/' . $shop['slug'];
 }
 
 function user_shops(int $userId): array

@@ -30,7 +30,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if (!valid_custom_code($slug)) {
             throw new InvalidArgumentException(t('err_code_invalid'));
         }
-        if (db_value('SELECT 1 FROM forms WHERE slug = ? AND id <> ?', [$slug, (int) ($form['id'] ?? 0)])) {
+        if (slug_taken($slug, ['forms', (int) ($form['id'] ?? 0)])) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
         $title = mb_substr(trim((string) ($_POST['title'] ?? '')), 0, 80);
@@ -106,7 +106,7 @@ page_start(['title' => $form ? t('fm_edit') : t('fm_new'), 'noindex' => true, 'b
         <h3 style="margin-bottom:14px"><?= e(t('fm_settings')) ?></h3>
         <div class="field"><label for="title"><?= e(t('fm_f_title')) ?></label><input class="input" id="title" name="title" maxlength="80" value="<?= $v('title') ?>" placeholder="<?= e(t('fm_f_title_ph')) ?>" required></div>
         <div class="field"><label for="slug"><?= e(t('fm_f_slug')) ?></label>
-          <div class="inline-prefix"><span><?= e(current_domain()) ?>/f/</span><input id="handle" name="slug" maxlength="30" value="<?= $v('slug') ?>" placeholder="my-form" pattern="[a-z0-9-]{3,30}" required></div>
+          <div class="inline-prefix"><span><?= e(current_domain()) ?>/</span><input id="handle" name="slug" maxlength="30" value="<?= $v('slug') ?>" placeholder="my-form" pattern="[a-z0-9-]{3,30}" required></div>
           <p class="hint"><?= e(t('fm_f_slug_hint')) ?></p></div>
         <?php if (count($domains) > 1): ?>
         <div class="field"><span class="label"><?= e(t('gen_domain')) ?></span><div class="seg"><?php $cur = (string) ($_POST['domain'] ?? ($form['domain'] ?? current_domain())); foreach ($domains as $d): ?><input type="radio" name="domain" id="dom-<?= e($d) ?>" value="<?= e($d) ?>" <?= $d === $cur ? 'checked' : '' ?>><label for="dom-<?= e($d) ?>"><?= e($d) ?></label><?php endforeach; ?></div></div>

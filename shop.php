@@ -31,7 +31,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if (!valid_custom_code($slug)) {
             throw new InvalidArgumentException(t('err_code_invalid'));
         }
-        if (db_value('SELECT 1 FROM shops WHERE slug = ? AND id <> ?', [$slug, (int) ($shop['id'] ?? 0)])) {
+        if (slug_taken($slug, ['shops', (int) ($shop['id'] ?? 0)])) {
             throw new InvalidArgumentException(t('err_code_taken'));
         }
         $name = mb_substr(trim((string) ($_POST['name'] ?? '')), 0, 80);
@@ -138,7 +138,7 @@ page_start(['title' => $shop ? t('sh_settings') : t('sh_new'), 'noindex' => true
       <div class="card">
         <h3 style="margin-bottom:14px"><?= e(t('sh_basics')) ?></h3>
         <div class="field"><label for="name"><?= e(t('sh_f_shopname')) ?></label><input class="input" id="name" name="name" maxlength="80" value="<?= $v('name') ?>" required></div>
-        <div class="field"><label for="slug"><?= e(t('fm_f_slug')) ?></label><div class="inline-prefix"><span><?= e(current_domain()) ?>/s/</span><input id="handle" name="slug" maxlength="30" value="<?= $v('slug') ?>" placeholder="my-shop" pattern="[a-z0-9-]{3,30}" required></div></div>
+        <div class="field"><label for="slug"><?= e(t('fm_f_slug')) ?></label><div class="inline-prefix"><span><?= e(current_domain()) ?>/</span><input id="handle" name="slug" maxlength="30" value="<?= $v('slug') ?>" placeholder="my-shop" pattern="[a-z0-9-]{3,30}" required></div></div>
         <?php if (count($domains) > 1): ?><div class="field"><span class="label"><?= e(t('gen_domain')) ?></span><div class="seg"><?php $cur = (string) ($_POST['domain'] ?? ($shop['domain'] ?? current_domain())); foreach ($domains as $d): ?><input type="radio" name="domain" id="dom-<?= e($d) ?>" value="<?= e($d) ?>" <?= $d === $cur ? 'checked' : '' ?>><label for="dom-<?= e($d) ?>"><?= e($d) ?></label><?php endforeach; ?></div></div><?php endif; ?>
         <div class="field"><label for="tagline"><?= e(t('sh_f_tagline')) ?></label><input class="input" id="tagline" name="tagline" maxlength="160" value="<?= $v('tagline') ?>"></div>
         <div class="field"><label for="about"><?= e(t('sh_f_about')) ?> <small><?= e(t('gen_optional')) ?></small></label><textarea class="input" id="about" name="about" maxlength="1000" style="min-height:70px"><?= $v('about') ?></textarea></div>

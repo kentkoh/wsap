@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
-/** /s/{slug} — public shop: catalogue, cart, checkout → WhatsApp order message. */
-require __DIR__ . '/lib/bootstrap.php';
-require __DIR__ . '/lib/shops.php';
-require __DIR__ . '/lib/ua.php';
+/** wsap.me/{slug} (via go.php) — public shop: catalogue, cart, checkout → WhatsApp order message. */
+require_once __DIR__ . '/lib/bootstrap.php';
+require_once __DIR__ . '/lib/shops.php';
+require_once __DIR__ . '/lib/ua.php';
 
 header('Cache-Control: no-store');
 $shop = find_shop((string) ($_GET['s'] ?? ''));

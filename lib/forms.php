@@ -46,14 +46,14 @@ function form_is_published(array $form, ?array $owner = null): bool
 function form_url(array $form): string
 {
     if (cfg('env') === 'development') {
-        return base_url() . '/f/' . $form['slug'];
+        return base_url() . '/' . $form['slug'];
     }
-    return 'https://' . $form['domain'] . '/f/' . $form['slug'];
+    return 'https://' . $form['domain'] . '/' . $form['slug'];
 }
 
 function form_display(array $form): string
 {
-    return $form['domain'] . '/f/' . $form['slug'];
+    return $form['domain'] . '/' . $form['slug'];
 }
 
 function user_forms(int $userId): array

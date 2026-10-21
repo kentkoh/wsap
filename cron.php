@@ -46,7 +46,7 @@ foreach ([7, 0] as $daysAhead) {
         if (setting($flag) !== '') {
             continue;
         }
-        $label = $f['domain'] . '/f/' . $f['slug'];
+        $label = $f['domain'] . '/' . $f['slug'];
         $ok = send_mail((string) $f['email'], (string) $f['name'],
             t($daysAhead ? 'mail_expiring_subject' : 'mail_expired_subject', ['link' => $label]),
             mail_template(t($daysAhead ? 'mail_expiring_title' : 'mail_expired_title'),

@@ -44,7 +44,7 @@ if (($link || $form || $shop) && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') 
 
 $priceSen = premium_price_sen($plan);
 $rm = fn(int $y) => 'RM' . rtrim(rtrim(number_format($priceSen * $y / 100, 2), '0'), '.');
-$waText = 'Hi WSAP, I want to upgrade ' . ($shop ? shop_display($shop) : ($form ? $form['domain'] . '/f/' . $form['slug'] : ($link ? short_display($link) : 'a link'))) . '. Account: ' . $u['email'];
+$waText = 'Hi WSAP, I want to upgrade ' . ($shop ? shop_display($shop) : ($form ? $form['domain'] . '/' . $form['slug'] : ($link ? short_display($link) : 'a link'))) . '. Account: ' . $u['email'];
 
 page_start(['title' => ($form || $shop) ? t('fm_publish') : t('up_title'), 'noindex' => true, 'body_class' => 'page-app']);
 ?>
