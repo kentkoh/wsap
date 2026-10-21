@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS links (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   code        TEXT NOT NULL UNIQUE,
   domain      TEXT NOT NULL DEFAULT 'wsap.me',
+  type        TEXT NOT NULL DEFAULT 'chat',
   user_id     INTEGER NULL REFERENCES users(id) ON DELETE SET NULL,
   phone       TEXT NOT NULL,
   message     TEXT NOT NULL,
@@ -33,6 +34,7 @@ CREATE INDEX IF NOT EXISTS idx_links_session ON links(session_key);
 CREATE TABLE IF NOT EXISTS clicks (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   link_id    INTEGER NOT NULL REFERENCES links(id) ON DELETE CASCADE,
+  destination_id INTEGER NULL,
   created_at TEXT NOT NULL,
   ip_hash    TEXT NOT NULL DEFAULT '',
   country    TEXT NOT NULL DEFAULT '',
@@ -76,3 +78,18 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TEXT NOT NULL,
   paid_at    TEXT NULL
 );
+CREATE TABLE IF NOT EXISTS destinations (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  link_id    INTEGER NOT NULL REFERENCES links(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL DEFAULT '',
+  phone      TEXT NOT NULL,
+  message    TEXT NOT NULL,
+  rule_type  TEXT NOT NULL DEFAULT 'always',
+  rule       TEXT NOT NULL,
+  weight     INTEGER NOT NULL DEFAULT 1,
+  sort       INTEGER NOT NULL DEFAULT 0,
+  active     INTEGER NOT NULL DEFAULT 1,
+  clicks     INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_dest_link ON destinations(link_id);

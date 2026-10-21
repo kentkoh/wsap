@@ -41,10 +41,23 @@ if ((int) $link['active'] !== 1) {
     go_page(t('paused_t'), t('paused_d'), '<a class="btn btn-primary" href="/">' . e(t('make_own')) . '</a>');
 }
 
-$target = wa_url($link);
 $info = click_info();
+$dest = null;
 try {
-    record_click($link, $info);
+    // Smart routing only while the link is Premium; otherwise the link's own number is used.
+    $owner = $link['user_id'] ? db_row('SELECT * FROM users WHERE id = ?', [(int) $link['user_id']]) : null;
+    if (($link['type'] ?? 'chat') === 'smart' && link_is_premium($link, $owner)) {
+        $dest = resolve_destination($link, ['country' => $info['country'], 'referrer' => $info['referrer'], 'is_qr' => $info['is_qr'], 'now' => time()]);
+    }
+} catch (Throwable $e) {
+    error_log('smart route: ' . $e->getMessage());
+}
+$eff = effective_target($link, $dest);
+$target = wa_url($eff);
+$link['phone'] = $eff['phone'];
+$link['message'] = $eff['message'];
+try {
+    record_click($link, $info, $dest ? (int) $dest['id'] : null);
 } catch (Throwable $e) {
     error_log('record_click: ' . $e->getMessage());
 }

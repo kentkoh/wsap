@@ -67,7 +67,9 @@ page_start(['title' => t('an_title') . ' · ' . short_display($link), 'noindex' 
       <?php endif; ?>
     </div>
     <div class="breakdowns">
-      <?php foreach (['country' => 'an_country', 'referrer' => 'an_referrer', 'device' => 'an_device', 'os' => 'an_os', 'browser' => 'an_browser', 'utm' => 'an_utm'] as $key => $label): ?>
+      <?php $groups = ['country' => 'an_country', 'referrer' => 'an_referrer', 'device' => 'an_device', 'os' => 'an_os', 'browser' => 'an_browser', 'utm' => 'an_utm'];
+      if (($link['type'] ?? 'chat') === 'smart') { $groups = ['destination' => 'an_destination'] + $groups; }
+      foreach ($groups as $key => $label): ?>
       <div class="card bd"><h3><?= e(t($label)) ?></h3>
         <?php if (!$s[$key]): ?><p class="muted small"><?= e(t('an_none')) ?></p><?php else: $top = max(1, (int) $s[$key][0]['n']); foreach ($s[$key] as $r): ?>
           <div class="row"><span><?= e($r['k'] !== '' ? (string) $r['k'] : t('an_unknown')) ?></span><b><?= number_format((int) $r['n']) ?></b><i style="width:<?= (int) $r['n'] / $top * 100 ?>%"></i></div>

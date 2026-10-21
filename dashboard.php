@@ -52,6 +52,7 @@ page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page
         <a class="btn btn-sm btn-ghost" href="/qr?id=<?= (int) $l['id'] ?>"><?= e(t('dash_qr')) ?></a>
         <a class="btn btn-sm btn-ghost" href="/analytics?id=<?= (int) $l['id'] ?>"><?= e(t('dash_stats')) ?></a>
         <a class="btn btn-sm btn-ghost" href="/link?id=<?= (int) $l['id'] ?>"><?= e(t('dash_edit')) ?></a>
+        <a class="btn btn-sm btn-ghost" href="/smart?id=<?= (int) $l['id'] ?>"><?= ($l['type'] ?? 'chat') === 'smart' ? '⚡ ' : '' ?><?= e(t('dash_smart')) ?></a>
         <?php if (!$lp): ?><a class="btn btn-sm btn-primary" href="/upgrade?id=<?= (int) $l['id'] ?>">★ <?= e(t('dash_upgrade')) ?></a>
         <?php elseif (!empty($l['premium_until'])): ?><a class="btn btn-sm btn-ghost" href="/upgrade?id=<?= (int) $l['id'] ?>"><?= e(t('dash_extend')) ?></a><?php endif; ?>
       </div>

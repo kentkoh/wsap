@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS links (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   code        VARCHAR(30)  NOT NULL UNIQUE,
   domain      VARCHAR(40)  NOT NULL DEFAULT 'wsap.me',    -- display domain; every domain resolves every code
+  type        VARCHAR(10)  NOT NULL DEFAULT 'chat',       -- chat | smart
   user_id     INT UNSIGNED NULL,
   phone       VARCHAR(16)  NOT NULL,                      -- digits only, E.164 without +
   message     TEXT         NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS links (
 CREATE TABLE IF NOT EXISTS clicks (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   link_id    INT UNSIGNED NOT NULL,
+  destination_id INT UNSIGNED NULL,
   created_at DATETIME    NOT NULL,
   ip_hash    CHAR(32)    NOT NULL DEFAULT '',
   country    CHAR(2)     NOT NULL DEFAULT '',
@@ -91,4 +93,21 @@ CREATE TABLE IF NOT EXISTS payments (
   INDEX idx_pay_user (user_id),
   CONSTRAINT fk_pay_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_pay_link FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS destinations (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  link_id    INT UNSIGNED NOT NULL,
+  name       VARCHAR(60)  NOT NULL DEFAULT '',
+  phone      VARCHAR(16)  NOT NULL,
+  message    TEXT         NOT NULL,
+  rule_type  VARCHAR(10)  NOT NULL DEFAULT 'always',
+  rule       TEXT         NOT NULL,
+  weight     TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  sort       SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  active     TINYINT(1)   NOT NULL DEFAULT 1,
+  clicks     INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at DATETIME     NOT NULL,
+  INDEX idx_dest_link (link_id),
+  CONSTRAINT fk_dest_link FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

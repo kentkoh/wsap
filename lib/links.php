@@ -167,19 +167,22 @@ function claim_session_links(int $userId): int
 
 // ---------------------------------------------------------------- click logging
 
-function record_click(array $link, array $info): void
+function record_click(array $link, array $info, ?int $destinationId = null): void
 {
     $ipHash = substr(hash('sha256', client_ip() . cfg('ip_salt') . gmdate('Y-m-d')), 0, 32);
     db_exec(
-        'INSERT INTO clicks (link_id, created_at, ip_hash, country, referrer, device, os, browser, is_bot, is_qr, utm_source)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO clicks (link_id, destination_id, created_at, ip_hash, country, referrer, device, os, browser, is_bot, is_qr, utm_source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
-            (int) $link['id'], now(), $ipHash, $info['country'], $info['referrer'], $info['device'],
+            (int) $link['id'], $destinationId, now(), $ipHash, $info['country'], $info['referrer'], $info['device'],
             $info['os'], $info['browser'], $info['is_bot'] ? 1 : 0, $info['is_qr'] ? 1 : 0, $info['utm_source'],
         ]
     );
     if (!$info['is_bot']) {
         db_exec('UPDATE links SET clicks = clicks + 1 WHERE id = ?', [(int) $link['id']]);
+        if ($destinationId) {
+            db_exec('UPDATE destinations SET clicks = clicks + 1 WHERE id = ?', [$destinationId]);
+        }
     }
 }
 
@@ -204,5 +207,6 @@ function link_stats(int $linkId, int $days = 30): array
         'os'       => $group('os'),
         'browser'  => $group('browser'),
         'utm'      => $group('utm_source'),
+        'destination' => db_rows("SELECT COALESCE(d.name, '') AS k, COUNT(*) AS n FROM clicks c LEFT JOIN destinations d ON d.id = c.destination_id WHERE c.link_id = ? AND c.is_bot = 0 AND c.created_at >= ? AND c.destination_id IS NOT NULL GROUP BY d.name ORDER BY n DESC LIMIT 12", $p),
     ];
 }
