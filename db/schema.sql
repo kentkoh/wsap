@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS forms (
   save_responses TINYINT(1)   NOT NULL DEFAULT 1,
   privacy_url    VARCHAR(255) NOT NULL DEFAULT '',
   active         TINYINT(1)   NOT NULL DEFAULT 1,
+  demo           TINYINT(1)   NOT NULL DEFAULT 0,         -- demo: preview popup instead of sending
   premium_until  DATETIME     NULL,                       -- published while in the future
   views          INT UNSIGNED NOT NULL DEFAULT 0,
   starts         INT UNSIGNED NOT NULL DEFAULT 0,
@@ -178,6 +179,7 @@ CREATE TABLE IF NOT EXISTS shops (
   payment_note  VARCHAR(300) NOT NULL DEFAULT '',
   is_open       TINYINT(1)   NOT NULL DEFAULT 1,
   active        TINYINT(1)   NOT NULL DEFAULT 1,
+  demo          TINYINT(1)   NOT NULL DEFAULT 0,
   premium_until DATETIME     NULL,
   views         INT UNSIGNED NOT NULL DEFAULT 0,
   created_at    DATETIME     NOT NULL,

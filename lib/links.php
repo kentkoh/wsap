@@ -18,6 +18,7 @@ const RESERVED_CODES = [
     'forgot', 'reset', 'verify', 'claim', 'sitemap', 'robots', 'index', 'wsap', 'whatsapp', 'wa', 'www',
     'forms', 'form', 'shop', 'bio', 'page', 'pages', 'smart', 'app', 'mail', 'email', 'support', 'status',
     'upgrade', 'checkout', 'billplz', 'webhook', 'webhooks', 'static', 'img', 'css', 'js', 'uploads',
+    'premium-links', 'whatsapp-forms', 'whatsapp-shop', 'store', 'products', 'categories', 'coupons', 'customers', 'orders', 'responses', 'smart', 'cron', 'payments', 'demo',
 ];
 
 /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/bootstrap.php';
 require_once __DIR__ . '/lib/shops.php';
 require_once __DIR__ . '/lib/ua.php';
+require_once __DIR__ . '/lib/demo.php';
 
 header('Cache-Control: no-store');
 $shop = find_shop((string) ($_GET['s'] ?? ''));
@@ -48,6 +49,7 @@ $waIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" a
 <link rel="icon" href="<?= $shop['logo'] !== '' ? e($abs($shop['logo'])) : '/assets/img/favicon.svg' ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/app.css">
+<?= demo_popup_css() ?>
 <style>
   :root{--acc:<?= e($shop['accent']) ?>;--sp:#faf9f5;--spt:#111}
   body{background:var(--sp);color:var(--spt);font-family:"Plus Jakarta Sans",system-ui,sans-serif}
@@ -103,7 +105,7 @@ $waIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" a
 </style>
 </head>
 <body class="page-pad">
-<?php if ($preview): ?><div class="fwarn"><?= e(t('sh_preview_note')) ?></div><?php endif; ?>
+<?php if ($preview): ?><div class="fwarn"><?= e(t('sh_preview_note')) ?></div><?php elseif ((int) ($shop['demo'] ?? 0) === 1): ?><div class="fwarn">✦ <?= e(t('demo_banner_shop')) ?></div><?php endif; ?>
 <header>
   <div class="scover" <?= $shop['cover'] !== '' ? 'style="background-image:url(' . e($shop['cover']) . ')"' : '' ?>></div>
   <div class="sw shead">
@@ -214,7 +216,7 @@ $waIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" a
   document.querySelectorAll('input[name=shipping]').forEach(function(r){ r.addEventListener('change', renderCart); });
   var ac=$('#apply-coupon'); if(ac) ac.addEventListener('click', function(){ applyCoupon(true); renderCart(); });
   $('#checkout').addEventListener('submit', function(e){ e.preventDefault(); if(!cart.length) return; var f=e.target; if(!f.checkValidity()){ f.reportValidity(); return; } $('#cart-json').value=JSON.stringify(cart); var btn=f.querySelector('button[type=submit]'); btn.disabled=true;
-    fetch(f.action,{method:'POST', body:new FormData(f)}).then(function(r){return r.json();}).then(function(j){ if(!j.ok){ throw new Error(j.error||T.err); } cart=[]; save(); renderBar(); location.href=j.url; }).catch(function(err){ var el=$('#co-error'); el.textContent=err.message; el.style.display=''; btn.disabled=false; }); });
+    fetch(f.action,{method:'POST', body:new FormData(f)}).then(function(r){return r.json();}).then(function(j){ if(!j.ok){ throw new Error(j.error||T.err); } cart=[]; save(); renderBar(); if(j.demo){ close('cm'); btn.disabled=false; document.body.insertAdjacentHTML('beforeend', j.html); return; } location.href=j.url; }).catch(function(err){ var el=$('#co-error'); el.textContent=err.message; el.style.display=''; btn.disabled=false; }); });
   renderBar();
 })();
 </script>

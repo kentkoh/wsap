@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/bootstrap.php';
 require_once __DIR__ . '/lib/forms.php';
 require_once __DIR__ . '/lib/ua.php';
+require_once __DIR__ . '/lib/demo.php';
 
 header('Cache-Control: no-store');
 $form = find_form((string) ($_GET['s'] ?? ''));
@@ -23,6 +24,8 @@ $questions = form_questions($form);
 $theme = form_theme($form);
 $err = null;
 $info = click_info();
+$isDemo = (int) ($form['demo'] ?? 0) === 1;
+$demoPopup = '';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     try {
@@ -34,18 +37,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         }
         $answers = validate_answers($questions, $_POST);
         $message = compose_form_message($form, $answers);
-        if (!$preview) {
+        if ($isDemo || $preview) {
+            if ($isDemo && !$preview) {
+                db_exec('UPDATE forms SET submits = submits + 1 WHERE id = ?', [(int) $form['id']]);
+            }
+            $demoPopup = demo_popup_html($message, $form['phone'], '/form', t('demo_cta_form'), 'form');
+            $_POST = [];
+        } else {
             db_exec('UPDATE forms SET submits = submits + 1 WHERE id = ?', [(int) $form['id']]);
             if ((int) $form['save_responses'] === 1) {
                 db_exec('INSERT INTO form_responses (form_id, created_at, answers, country, device) VALUES (?, ?, ?, ?, ?)',
                     [(int) $form['id'], now(), json_encode($answers, JSON_UNESCAPED_UNICODE), $info['country'], $info['device']]);
             }
+            $target = 'https://wa.me/' . $form['phone'] . '?text=' . rawurlencode($message);
+            if ($info['in_app'] !== '') {
+                $target = 'whatsapp://send?phone=' . $form['phone'] . '&text=' . rawurlencode($message);
+            }
+            redirect($target);
         }
-        $target = 'https://wa.me/' . $form['phone'] . '?text=' . rawurlencode($message);
-        if ($info['in_app'] !== '') {
-            $target = 'whatsapp://send?phone=' . $form['phone'] . '&text=' . rawurlencode($message);
-        }
-        redirect($target);
     } catch (InvalidArgumentException $e) {
         $err = $e->getMessage();
     } catch (Throwable $e) {
@@ -69,6 +78,7 @@ $old = fn(string $k) => e((string) ($_POST[$k] ?? ''));
 <meta property="og:title" content="<?= e($form['title']) ?>"><meta property="og:description" content="<?= e($form['intro']) ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/css/app.css">
+<?= demo_popup_css() ?>
 <style>
   :root{--f-bg:<?= $theme['bg'] ?>;--f-text:<?= $theme['text'] ?>;--f-title:<?= $theme['title'] ?>;--f-bar:<?= $theme['bar'] ?>;--f-btn:<?= $theme['button'] ?>}
   body{background:var(--f-bg);color:var(--f-text)}
@@ -87,7 +97,8 @@ $old = fn(string $k) => e((string) ($_POST[$k] ?? ''));
 </head>
 <body>
 <div class="fpage <?= $steps ? 'steps' : 'single' ?>">
-  <?php if ($preview): ?><div class="fwarn"><?= e(t('fm_preview_note')) ?></div><?php endif; ?>
+  <?php if ($preview): ?><div class="fwarn"><?= e(t('fm_preview_note')) ?></div><?php elseif ($isDemo): ?><div class="fwarn">✦ <?= e(t('demo_banner')) ?></div><?php endif; ?>
+  <?= $demoPopup ?>
   <div class="fhead">
     <?php if ($form['logo'] !== ''): ?><img src="<?= e($form['logo']) ?>" alt=""><?php endif; ?>
     <h1><?= e($form['title']) ?></h1>

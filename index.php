@@ -102,6 +102,17 @@ page_start(['body_class' => 'page-home']);
   </div>
 </section>
 
+<section class="section" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="section-head reveal"><span class="kicker"><?= e(t('home_products_k')) ?></span><h2><?= e(t('home_products_t')) ?></h2></div>
+    <div class="home-products">
+      <a class="hp reveal" href="/premium-links"><div class="ico">✨</div><h3><?= e(t('nav_p_links')) ?></h3><p><?= e(t('nav_p_links_d')) ?>. <?= e(t('pl_f2d')) ?></p><span class="more"><?= e(t('home_more')) ?> →</span></a>
+      <a class="hp reveal" href="/whatsapp-forms"><div class="ico">📝</div><h3><?= e(t('nav_p_forms')) ?></h3><p><?= e(t('nav_p_forms_d')) ?>. <?= e(t('pf_how_3d')) ?></p><span class="more"><?= e(t('home_more')) ?> →</span></a>
+      <a class="hp reveal" href="/whatsapp-shop"><div class="ico">🛍️</div><h3><?= e(t('nav_p_shops')) ?></h3><p><?= e(t('nav_p_shops_d')) ?>. <?= e(t('ps_how_3d')) ?></p><span class="more"><?= e(t('home_more')) ?> →</span></a>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="where">
   <div class="wrap">
     <div class="section-head reveal">

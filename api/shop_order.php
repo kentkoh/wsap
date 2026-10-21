@@ -58,12 +58,16 @@ try {
         'number' => order_number(), 'customer' => json_encode($customer, JSON_UNESCAPED_UNICODE), 'items' => json_encode($v['items'], JSON_UNESCAPED_UNICODE),
         'subtotal' => $v['subtotal'], 'shipping_name' => $shipName, 'shipping' => $shipPrice, 'coupon' => $cp['code'], 'discount' => $cp['discount'], 'total' => $total,
     ];
-    if (!$preview) {
+    if (!$preview && (int) ($shop['demo'] ?? 0) !== 1) {
         db_insert('INSERT INTO orders (shop_id, number, customer, items, subtotal, shipping_name, shipping, coupon, discount, total, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [(int) $shop['id'], $order['number'], $order['customer'], $order['items'], $order['subtotal'], $order['shipping_name'], $order['shipping'], $order['coupon'], $order['discount'], $order['total'], 'pending', now()]);
     }
     $msg = compose_order_message($shop, $order);
     $info = click_info();
+    if ((int) ($shop['demo'] ?? 0) === 1 || $preview) {
+        require_once dirname(__DIR__) . '/lib/demo.php';
+        json_out(['ok' => true, 'demo' => true, 'number' => $order['number'], 'html' => demo_popup_html($msg, $shop['phone'], '/shop', t('demo_cta_shop'), 'shop')]);
+    }
     $url = ($info['in_app'] !== '' ? 'whatsapp://send?phone=' . $shop['phone'] . '&text=' : 'https://wa.me/' . $shop['phone'] . '?text=') . rawurlencode($msg);
     json_out(['ok' => true, 'url' => $url, 'number' => $order['number']]);
 } catch (InvalidArgumentException $e) {

@@ -58,7 +58,13 @@ function page_start(array $o = []): void
     </a>
     <nav class="nav-links" aria-label="Main">
       <a href="/#generator"><?= e(t('nav_free')) ?></a>
-      <a href="/#premium"><?= e(t('nav_premium')) ?></a>
+      <div class="nav-dd"><a href="/premium-links" aria-haspopup="true"><?= e(t('nav_products')) ?></a>
+        <div class="nav-dd-menu">
+          <a href="/premium-links"><span class="ico">✨</span><span><?= e(t('nav_p_links')) ?><small><?= e(t('nav_p_links_d')) ?></small></span></a>
+          <a href="/whatsapp-forms"><span class="ico">📝</span><span><?= e(t('nav_p_forms')) ?><small><?= e(t('nav_p_forms_d')) ?></small></span></a>
+          <a href="/whatsapp-shop"><span class="ico">🛍️</span><span><?= e(t('nav_p_shops')) ?><small><?= e(t('nav_p_shops_d')) ?></small></span></a>
+        </div>
+      </div>
       <a href="/pricing"><?= e(t('nav_pricing')) ?></a>
       <a href="/#faq"><?= e(t('nav_faq')) ?></a>
     </nav>
@@ -106,7 +112,9 @@ function page_end(): void
     <div>
       <h4><?= e(t('footer_product')) ?></h4>
       <a href="/#generator"><?= e(t('nav_free')) ?></a>
-      <a href="/#premium"><?= e(t('nav_premium')) ?></a>
+      <a href="/premium-links"><?= e(t('nav_p_links')) ?></a>
+      <a href="/whatsapp-forms"><?= e(t('nav_p_forms')) ?></a>
+      <a href="/whatsapp-shop"><?= e(t('nav_p_shops')) ?></a>
       <a href="/pricing"><?= e(t('nav_pricing')) ?></a>
       <a href="/#faq"><?= e(t('nav_faq')) ?></a>
     </div>

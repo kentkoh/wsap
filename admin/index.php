@@ -75,6 +75,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $table = in_array($_POST['table'] ?? '', ['forms', 'shops'], true) ? $_POST['table'] : 'forms';
             db_exec("UPDATE $table SET active = 1 - active WHERE id = ?", [(int) $_POST['iid']]);
             flash('ok', 'Updated.');
+        } elseif ($act === 'item_demo') {
+            $table = in_array($_POST['table'] ?? '', ['forms', 'shops'], true) ? $_POST['table'] : 'forms';
+            db_exec("UPDATE $table SET demo = 1 - demo WHERE id = ?", [(int) $_POST['iid']]);
+            flash('ok', 'Demo flag toggled.');
         } elseif ($act === 'item_delete') {
             $table = in_array($_POST['table'] ?? '', ['forms', 'shops'], true) ? $_POST['table'] : 'forms';
             db_exec("DELETE FROM $table WHERE id = ?", [(int) $_POST['iid']]);
@@ -165,6 +169,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
       <td><?= e((string) $r[$label]) ?></td><td class="small"><?= e($r['email']) ?></td><td>+<?= e($r['phone']) ?></td>
       <td class="small"><?= e(substr((string) ($r['premium_until'] ?? ''), 0, 10)) ?: '<i>draft</i>' ?></td><td class="small"><?= e(substr((string) $r['created_at'], 0, 10)) ?></td>
       <td style="white-space:nowrap"><form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="item_toggle"><input type="hidden" name="table" value="<?= $tbl ?>"><input type="hidden" name="iid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-ghost"><?= (int) $r['active'] ? 'Disable' : 'Enable' ?></button></form>
+        <form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="item_demo"><input type="hidden" name="table" value="<?= $tbl ?>"><input type="hidden" name="iid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm <?= (int) ($r['demo'] ?? 0) ? 'btn-primary' : 'btn-ghost' ?>" title="Demo: preview popup instead of sending">Demo</button></form>
         <form method="post" style="display:inline" data-confirm="Delete <?= e($r['slug']) ?> and all its data?"><?= csrf_field() ?><input type="hidden" name="act" value="item_delete"><input type="hidden" name="table" value="<?= $tbl ?>"><input type="hidden" name="iid" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-danger">Delete</button></form></td>
     </tr>
     <?php endforeach; ?>
