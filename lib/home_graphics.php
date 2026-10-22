@@ -116,13 +116,30 @@ function hg_flow(string $kind, string $domain, string $color): string
                 . '<line class="flow-line" x1="115" y1="142" x2="115" y2="195" stroke="' . $color . '" stroke-width="2"/>' . sprintf($wa, 115, 215);
             break;
         case 'smart':
+            // One visitor dot: chip → person 1 (person lights up) → WhatsApp 1, then person 2, then 3. SMIL-sequenced.
             $svg .= $chip($domain . '/yourteam', 150) . '<g transform="translate(112,40)">' . $cursor . '</g>'
-                . '<line class="flow-line" x1="115" y1="48" x2="115" y2="95" stroke="' . $color . '" stroke-width="2"/><circle class="flow-dot" cx="115" cy="48" r="4" fill="' . $color . '"/>'
-                . '<path d="M45 95H185M45 95V120M115 95V120M185 95V120" stroke="' . $color . '" stroke-width="2" fill="none"/>';
-            foreach ([45, 115, 185] as $x) {
-                $svg .= '<g transform="translate(' . $x . ',140)"><circle r="20" fill="#fff" stroke="' . $color . '" stroke-width="2"/><circle cy="-4" r="6" fill="none" stroke="' . $color . '" stroke-width="2"/><path d="M-10 12a10 10 0 0 1 20 0" fill="none" stroke="' . $color . '" stroke-width="2"/></g>'
-                    . '<line class="flow-line" x1="' . $x . '" y1="160" x2="' . $x . '" y2="195" stroke="' . $color . '" stroke-width="2"/>' . sprintf($wa, $x, 215);
+                . '<path d="M115 48V95M45 95H185M45 95V120M115 95V120M185 95V120" stroke="' . $color . '" stroke-width="2" fill="none" stroke-dasharray="5 5" opacity=".5"/>';
+            foreach ([45, 115, 185] as $i => $x) {
+                $n = $i + 1;
+                $svg .= '<g transform="translate(' . $x . ',140)" stroke="' . $color . '" stroke-width="2">'
+                    . '<circle r="20" fill="#fff"><animate attributeName="fill" values="#fff;' . $color . ';' . $color . ';#fff" keyTimes="0;.15;.7;1" dur="1.1s" begin="sa' . $n . '.end"/><animate attributeName="r" values="20;24;22;20" keyTimes="0;.2;.7;1" dur="1.1s" begin="sa' . $n . '.end"/></circle>'
+                    . '<g fill="none"><animate attributeName="stroke" values="' . $color . ';#fff;#fff;' . $color . '" keyTimes="0;.15;.7;1" dur="1.1s" begin="sa' . $n . '.end"/><circle cy="-4" r="6"/><path d="M-10 12a10 10 0 0 1 20 0"/></g>'
+                    . '</g>'
+                    . '<line x1="' . $x . '" y1="160" x2="' . $x . '" y2="195" stroke="' . $color . '" stroke-width="2" stroke-dasharray="5 5" opacity=".5"/>'
+                    . '<circle cx="' . $x . '" cy="215" r="18" fill="none" stroke="#25d366" stroke-width="3" opacity="0"><animate attributeName="r" values="18;32" dur=".8s" begin="sb' . $n . '.end"/><animate attributeName="opacity" values=".9;0" dur=".8s" begin="sb' . $n . '.end"/></circle>'
+                    . sprintf($wa, $x, 215);
             }
+            // The travelling dot. Legs: saN chip→person N (pause while the person lights up), sbN person N→WhatsApp N.
+            $svg .= '<circle r="5" fill="' . $color . '" stroke="#fff" stroke-width="1.5" opacity="0">'
+                . '<animateMotion id="sa1" begin="0.4s;sb3.end+1.4s" dur="1.2s" path="M115 48V95H45V118" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
+                . '<animateMotion id="sb1" begin="sa1.end+.8s" dur=".6s" path="M45 162V196" fill="freeze"/>'
+                . '<animateMotion id="sa2" begin="sb1.end+1.2s" dur="1.2s" path="M115 48V118" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
+                . '<animateMotion id="sb2" begin="sa2.end+.8s" dur=".6s" path="M115 162V196" fill="freeze"/>'
+                . '<animateMotion id="sa3" begin="sb2.end+1.2s" dur="1.2s" path="M115 48V95H185V118" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
+                . '<animateMotion id="sb3" begin="sa3.end+.8s" dur=".6s" path="M185 162V196" fill="freeze"/>'
+                . '<animate attributeName="opacity" values="0;1" dur=".25s" begin="sa1.begin;sa2.begin;sa3.begin" fill="freeze"/>'
+                . '<animate attributeName="opacity" values="1;0" dur=".35s" begin="sb1.end;sb2.end;sb3.end" fill="freeze"/>'
+                . '</circle>';
             break;
         case 'form':
             $svg .= $chip($domain . '/booking', 140) . '<g transform="translate(112,40)">' . $cursor . '</g>'
