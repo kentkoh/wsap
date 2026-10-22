@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/marketing.php';
+require_once __DIR__ . '/lib/home_graphics.php';
 
 $price = price('smart');            // monthly, admin-editable
 $plink = price('premium');
@@ -39,6 +40,8 @@ page_start(['title' => t('nav_p_smart') . ' — ' . t('sl_h1a') . ' ' . t('sl_h1
     </div>
   </div>
 </section>
+
+<?= hg_flow_explainer('smart', current_domain(), '#1d4ed8', '#e0ecff') ?>
 
 <section class="section band" id="why">
   <div class="wrap">

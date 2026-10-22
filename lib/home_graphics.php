@@ -181,3 +181,27 @@ function hg_flow(string $kind, string $domain, string $color): string
     }
     return $svg . '</svg>';
 }
+
+/**
+ * "How it works" explainer for a product page: the animated flow card on the left, three numbered steps on the
+ * right. The steps light up in sync with the SVG (SMIL begin/end events): 1 while the dot travels from the chip,
+ * 2 while the middle element is lit, 3 when WhatsApp opens.
+ */
+function hg_flow_explainer(string $kind, string $domain, string $color, string $bg): string
+{
+    $prefix = ['link' => 'lk', 'smart' => 's', 'form' => 'fm', 'shop' => 'sh'][$kind];
+    $k = 'fx_' . $kind . '_';
+    $steps = '';
+    foreach ([1, 2, 3] as $i) {
+        $steps .= '<div class="sl-step' . ($i === 1 ? ' on' : '') . '" data-i="' . ($i - 1) . '"><span class="n">' . $i . '</span><div><b>' . e(t($k . $i . 't')) . '</b><p>' . e(t($k . $i . 'd')) . '</p></div></div>';
+    }
+    return '<section class="section" id="how-flow"><div class="wrap"><div class="flow-x reveal">'
+        . '<div class="flow-x-art" style="background:' . $bg . '">' . hg_flow($kind, $domain, $color) . '</div>'
+        . '<div><span class="kicker">' . e(t('fx_k')) . '</span><h2>' . e(t($k . 't')) . '</h2><p class="lead">' . e(t($k . 'lead')) . '</p>'
+        . '<div class="sl-steps flow-x-steps">' . $steps . '</div></div>'
+        . '</div></div></section>'
+        . '<script>(function(){var box=document.getElementById("how-flow");if(!box)return;var steps=box.querySelectorAll(".sl-step");function on(i){steps.forEach(function(s,j){s.classList.toggle("on",j===i);});}'
+        . 'var a=box.querySelector("#' . $prefix . 'a1"),b=box.querySelector("#' . $prefix . 'b1");if(!a||!b)return;'
+        . 'box.querySelectorAll("animateMotion").forEach(function(m){var id=m.id||"";if(/a\d$/.test(id)){m.addEventListener("beginEvent",function(){on(0);});m.addEventListener("endEvent",function(){on(1);});}'
+        . 'else if(/b\d$/.test(id)){m.addEventListener("endEvent",function(){on(2);});}});})();</script>';
+}

@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/marketing.php';
+require_once __DIR__ . '/lib/home_graphics.php';
 require __DIR__ . '/lib/demo.php';
 
 $price = price('shop');                 // synced with admin pricing (settings table)
@@ -36,6 +37,8 @@ echo demo_popup_css();
     </div>
   </div>
 </section>
+
+<?= hg_flow_explainer('shop', current_domain(), '#7c3aed', '#ede9fe') ?>
 
 <section class="section band-dark">
   <div class="wrap">

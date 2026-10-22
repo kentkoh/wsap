@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/marketing.php';
+require_once __DIR__ . '/lib/home_graphics.php';
 
 $price = price('premium');
 $domain = current_domain();
@@ -31,6 +32,8 @@ page_start(['title' => t('nav_p_links') . ' — ' . t('pl_title_1') . ' ' . t('p
     </div>
   </div>
 </section>
+
+<?= hg_flow_explainer('link', current_domain(), '#0b3d2e', '#e6f4ec') ?>
 
 <section class="section">
   <div class="wrap">

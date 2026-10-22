@@ -705,3 +705,12 @@ textarea.input { min-height: 96px; resize: vertical; }
 .uc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 @media (max-width: 900px) { .uc-grid { grid-template-columns: 1fr 1fr; } } @media (max-width: 560px) { .uc-grid { grid-template-columns: 1fr; } }
 .uc { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; } .uc .mode-tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--green-2); } .uc h3 { font-size: 16px; margin: 6px 0 4px; } .uc p { font-size: 14px; color: var(--ink-2); margin: 0; }
+
+/* product page "how it works" explainer: animated flow card + synced steps */
+.flow-x { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(24px, 5vw, 72px); align-items: center; }
+@media (max-width: 900px) { .flow-x { grid-template-columns: 1fr; } }
+.flow-x-art { border-radius: 28px; padding: 28px; display: grid; place-items: center; min-height: 380px; }
+.flow-x-art svg { width: 100%; max-width: 300px; height: auto; }
+.flow-x h2 { margin-bottom: 10px; } .flow-x .lead { margin-bottom: 22px; }
+.flow-x-steps .sl-step { transition: border-color .25s, box-shadow .25s, background .25s; }
+.flow-x-steps .sl-step.on { background: #fff; }
