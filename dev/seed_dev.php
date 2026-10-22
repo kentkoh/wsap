@@ -68,9 +68,10 @@ $forms = [
     ['demo-homestay', 'Tempah Homestay Seri Damai', 'Hai Seri Damai! Saya nak tempah homestay:', '[{"id":"qname","type":"short","label":"Nama penuh","required":true,"options":[],"help":"","max":0},{"id":"qdates","type":"daterange","label":"Tarikh check-in dan check-out","required":true,"options":[],"help":"","max":0},{"id":"qunit","type":"single","label":"Unit","required":true,"options":["Villa 3 bilik (RM450/malam)","Studio (RM180/malam)"],"help":"","max":0}]'],
 ];
 foreach ($forms as [$slug, $title, $open, $q]) {
+    db_exec('UPDATE forms SET logo = ? WHERE slug = ? AND logo = ""', ['/assets/img/demo/logo-' . substr($slug, 5) . '.svg', $slug]);
     if (!db_value('SELECT 1 FROM forms WHERE slug = ?', [$slug])) {
         db_exec('INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 1, 1, ?, 0, 0, 0, ?, ?)',
-            [$uid, $slug, 'wsap.me', $title, '', '60145866666', $open, 'steps', '{}', '', $q, '', now(86400 * 3650), now(), now()]);
+            [$uid, $slug, 'wsap.me', $title, '', '60145866666', $open, 'steps', '{}', '/assets/img/demo/logo-' . substr($slug, 5) . '.svg', $q, '', now(86400 * 3650), now(), now()]);
     }
 }
 echo "forms seeded\n";

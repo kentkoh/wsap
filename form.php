@@ -7,6 +7,7 @@ require __DIR__ . '/lib/forms.php';
 require __DIR__ . '/lib/countries.php';
 require __DIR__ . '/lib/ua.php';
 require __DIR__ . '/lib/app_nav.php';
+require __DIR__ . '/lib/shops.php'; // store_image()
 
 $u = require_login();
 $id = (int) ($_GET['id'] ?? ($_POST['id'] ?? 0));
@@ -40,6 +41,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             throw new InvalidArgumentException(t('err_phone'));
         }
         $questions = clean_questions((string) ($_POST['questions'] ?? '[]'));
+        // Logo: optional. Upload wins, then a pasted https URL, then keep the current one; "remove" clears it.
+        $logo = (string) ($form['logo'] ?? '');
+        if (!empty($_FILES['logo_file']['name'])) {
+            $logo = store_image($_FILES['logo_file'], 'flogo') ?: $logo;
+        } elseif (safe_url((string) ($_POST['logo'] ?? '')) !== '') {
+            $logo = safe_url((string) $_POST['logo']);
+        }
+        if (isset($_POST['remove_logo'])) {
+            $logo = '';
+        }
         $theme = [];
         foreach (form_default_theme() as $k => $v) {
             $c = (string) ($_POST['theme_' . $k] ?? $v);
@@ -50,7 +61,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'title' => $title, 'intro' => mb_substr(trim((string) ($_POST['intro'] ?? '')), 0, 500), 'phone' => $phone,
             'opening_line' => mb_substr(trim((string) ($_POST['opening_line'] ?? '')), 0, 200),
             'mode' => ($_POST['mode'] ?? 'steps') === 'single' ? 'single' : 'steps', 'theme' => json_encode($theme),
-            'logo' => safe_url((string) ($_POST['logo'] ?? '')), 'questions' => json_encode($questions, JSON_UNESCAPED_UNICODE),
+            'logo' => $logo, 'questions' => json_encode($questions, JSON_UNESCAPED_UNICODE),
             'save_responses' => isset($_POST['save_responses']) ? 1 : 0, 'privacy_url' => safe_url((string) ($_POST['privacy_url'] ?? '')),
             'active' => isset($_POST['active']) ? 1 : 0,
         ];
@@ -97,7 +108,7 @@ page_start(['title' => $form ? t('fm_edit') : t('fm_new'), 'noindex' => true, 'b
     <?php if ($form): ?><a class="btn btn-ghost btn-sm" href="<?= e(form_url($form)) ?>?preview=1" target="_blank" rel="noopener"><?= e(t('fm_preview')) ?> ↗</a><?php endif; ?></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
 
-  <form method="post" id="form-editor" novalidate>
+  <form method="post" id="form-editor" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?><?php if ($form): ?><input type="hidden" name="id" value="<?= (int) $form['id'] ?>"><?php endif; ?>
     <div class="qr-page" style="align-items:start">
       <div class="card">
@@ -116,7 +127,11 @@ page_start(['title' => $form ? t('fm_edit') : t('fm_new'), 'noindex' => true, 'b
         <div class="field"><span class="label"><?= e(t('fm_f_mode')) ?></span><div class="seg"><?php $m = (string) ($_POST['mode'] ?? ($form['mode'] ?? 'steps')); ?>
           <input type="radio" name="mode" id="mode-steps" value="steps" <?= $m === 'steps' ? 'checked' : '' ?>><label for="mode-steps"><?= e(t('fm_mode_steps')) ?></label>
           <input type="radio" name="mode" id="mode-single" value="single" <?= $m === 'single' ? 'checked' : '' ?>><label for="mode-single"><?= e(t('fm_mode_single')) ?></label></div></div>
-        <div class="field"><label for="logo"><?= e(t('fm_f_logo')) ?> <small><?= e(t('gen_optional')) ?></small></label><input class="input" id="logo" name="logo" type="url" value="<?= $v('logo') ?>" placeholder="https://…/logo.png"></div>
+        <div class="field"><label for="logo_file"><?= e(t('fm_f_logo')) ?> <small><?= e(t('gen_optional')) ?></small></label>
+          <?php if (!empty($form['logo'])): ?><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><img src="<?= e((string) $form['logo']) ?>" alt="" style="height:56px;width:56px;object-fit:cover;border-radius:12px;border:1px solid var(--line);background:#fff"><label class="small"><input type="checkbox" name="remove_logo"> <?= e(t('sh_remove')) ?></label></div><?php endif; ?>
+          <input class="input" type="file" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp">
+          <p class="hint"><?= e(t('fm_f_logo_hint')) ?></p>
+          <details style="margin-top:6px"><summary class="small muted" style="cursor:pointer"><?= e(t('fm_f_logo_url')) ?></summary><input class="input" id="logo" name="logo" type="url" placeholder="https://…/logo.png" style="margin-top:6px"></details></div>
         <div class="field"><span class="label"><?= e(t('fm_f_colors')) ?></span>
           <div style="display:flex;gap:14px;flex-wrap:wrap"><?php foreach ($theme as $k => $c): ?><label class="small" style="display:flex;flex-direction:column;gap:4px;align-items:center"><input type="color" name="theme_<?= $k ?>" value="<?= e((string) ($_POST['theme_' . $k] ?? $c)) ?>" style="width:44px;height:34px;border:1px solid var(--line-2);border-radius:8px;padding:2px;background:#fff"><?= e(t('fm_color_' . $k)) ?></label><?php endforeach; ?></div></div>
         <div class="field"><label for="privacy_url"><?= e(t('fm_f_privacy')) ?> <small><?= e(t('gen_optional')) ?></small></label><input class="input" id="privacy_url" name="privacy_url" type="url" value="<?= $v('privacy_url') ?>" placeholder="https://…/privacy"></div>

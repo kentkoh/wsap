@@ -7,7 +7,7 @@ SET @theme := '{"bg":"#f7f6f1","text":"#10201a","title":"#0b3d2e","bar":"#25d366
 
 INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at)
 SELECT @uid, 'demo-homestay', 'wsap.me', 'Tempah Homestay Seri Damai', 'Isi butiran anda, kami sahkan kekosongan dalam WhatsApp.', '60145866666', 'Hai Seri Damai! Saya nak tempah homestay:', 'steps',
-  REPLACE(@theme, '#0b3d2e', '#0f5a43'), '',
+  REPLACE(@theme, '#0b3d2e', '#0f5a43'), '/assets/img/demo/logo-homestay.svg',
   '[{"id":"qname","type":"short","label":"Nama penuh","help":"","required":true,"options":[],"max":0},
     {"id":"qphone","type":"phone","label":"Nombor WhatsApp","help":"","required":true,"options":[],"max":0},
     {"id":"qdates","type":"daterange","label":"Tarikh check-in dan check-out","help":"","required":true,"options":[],"max":0},
@@ -20,7 +20,7 @@ WHERE NOT EXISTS (SELECT 1 FROM forms WHERE slug = 'demo-homestay');
 
 INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at)
 SELECT @uid, 'demo-clinic', 'wsap.me', 'Book an appointment · Klinik Dr. Aina', 'Tell us when you can come and what it is about. We confirm the slot on WhatsApp.', '60145866666', 'Hi Klinik Dr. Aina, I would like to book an appointment:', 'steps',
-  REPLACE(REPLACE(@theme, '#0b3d2e', '#1d4ed8'), '#25d366', '#60a5fa'), '',
+  REPLACE(REPLACE(@theme, '#0b3d2e', '#1d4ed8'), '#25d366', '#60a5fa'), '/assets/img/demo/logo-clinic.svg',
   '[{"id":"qname","type":"short","label":"Patient name","help":"","required":true,"options":[],"max":0},
     {"id":"qic","type":"short","label":"IC / passport number","help":"For registration","required":true,"options":[],"max":0},
     {"id":"qphone","type":"phone","label":"WhatsApp number","help":"","required":true,"options":[],"max":0},
@@ -34,7 +34,7 @@ WHERE NOT EXISTS (SELECT 1 FROM forms WHERE slug = 'demo-clinic');
 
 INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at)
 SELECT @uid, 'demo-pickleball', 'wsap.me', 'Book a court · Smash Pickleball', 'Pick your court and time. We confirm availability on WhatsApp within minutes.', '60145866666', 'Hi Smash Pickleball! Court booking:', 'steps',
-  REPLACE(REPLACE(@theme, '#0b3d2e', '#c2410c'), '#25d366', '#fb923c'), '',
+  REPLACE(REPLACE(@theme, '#0b3d2e', '#c2410c'), '#25d366', '#fb923c'), '/assets/img/demo/logo-pickleball.svg',
   '[{"id":"qname","type":"short","label":"Your name","help":"","required":true,"options":[],"max":0},
     {"id":"qphone","type":"phone","label":"WhatsApp number","help":"","required":true,"options":[],"max":0},
     {"id":"qdate","type":"date","label":"Date","help":"","required":true,"options":[],"max":0},
@@ -48,7 +48,7 @@ WHERE NOT EXISTS (SELECT 1 FROM forms WHERE slug = 'demo-pickleball');
 
 INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at)
 SELECT @uid, 'demo-workshop', 'wsap.me', 'Minta sebut harga · Bengkel Kereta Hafiz', 'Beritahu masalah kereta anda. Kami bagi anggaran harga melalui WhatsApp.', '60145866666', 'Hai Bengkel Hafiz, saya nak minta sebut harga:', 'single',
-  REPLACE(REPLACE(@theme, '#0b3d2e', '#111827'), '#25d366', '#f59e0b'), '',
+  REPLACE(REPLACE(@theme, '#0b3d2e', '#111827'), '#25d366', '#f59e0b'), '/assets/img/demo/logo-workshop.svg',
   '[{"id":"qname","type":"short","label":"Nama","help":"","required":true,"options":[],"max":0},
     {"id":"qphone","type":"phone","label":"Nombor WhatsApp","help":"","required":true,"options":[],"max":0},
     {"id":"qcar","type":"short","label":"Model kereta dan tahun","help":"cth. Myvi 2019","required":true,"options":[],"max":0},
@@ -62,7 +62,7 @@ WHERE NOT EXISTS (SELECT 1 FROM forms WHERE slug = 'demo-workshop');
 
 INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at)
 SELECT @uid, 'demo-tuition', 'wsap.me', 'Enquiry · Bright Minds Tuition', 'Tell us about your child and we will suggest the right class and fee.', '60145866666', 'Hi Bright Minds, tuition enquiry:', 'steps',
-  REPLACE(REPLACE(@theme, '#0b3d2e', '#7c3aed'), '#25d366', '#c4b5fd'), '',
+  REPLACE(REPLACE(@theme, '#0b3d2e', '#7c3aed'), '#25d366', '#c4b5fd'), '/assets/img/demo/logo-tuition.svg',
   '[{"id":"qparent","type":"short","label":"Parent name","help":"","required":true,"options":[],"max":0},
     {"id":"qphone","type":"phone","label":"WhatsApp number","help":"","required":true,"options":[],"max":0},
     {"id":"qemail","type":"email","label":"Email","help":"For the timetable","required":false,"options":[],"max":0},
@@ -77,7 +77,7 @@ WHERE NOT EXISTS (SELECT 1 FROM forms WHERE slug = 'demo-tuition');
 
 INSERT INTO forms (user_id, slug, domain, title, intro, phone, opening_line, mode, theme, logo, questions, save_responses, privacy_url, active, demo, premium_until, views, starts, submits, created_at, updated_at)
 SELECT @uid, 'demo-catering', 'wsap.me', 'Tempahan katering · Dapur Mak Teh', 'Untuk majlis, kenduri atau meeting pejabat. Kami balas dengan menu dan harga.', '60145866666', 'Hai Dapur Mak Teh, saya nak tempah katering:', 'steps',
-  REPLACE(REPLACE(@theme, '#0b3d2e', '#b4232c'), '#25d366', '#f87171'), '',
+  REPLACE(REPLACE(@theme, '#0b3d2e', '#b4232c'), '#25d366', '#f87171'), '/assets/img/demo/logo-catering.svg',
   '[{"id":"qname","type":"short","label":"Nama","help":"","required":true,"options":[],"max":0},
     {"id":"qphone","type":"phone","label":"Nombor WhatsApp","help":"","required":true,"options":[],"max":0},
     {"id":"qevent","type":"dropdown","label":"Jenis majlis","help":"","required":true,"options":["Kenduri kahwin","Majlis pejabat / meeting","Hari lahir","Rumah terbuka","Lain-lain"],"max":0},

@@ -1168,4 +1168,6 @@ Nama: Marta Ruiz',
     'sl_r_split' => 'Selain itu · 50/50',
     'sl_to_counter' => 'Kaunter',
     'sl_tap_from' => 'tap dari',
+    'fm_f_logo_hint' => 'PNG, JPG atau WebP, sehingga 6 MB. Dipaparkan di atas borang anda. Bentuk segi empat paling sesuai.',
+    'fm_f_logo_url' => '…atau tampal URL imej',
 ];

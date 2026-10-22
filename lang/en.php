@@ -1187,4 +1187,6 @@ Name: Marta Ruiz',
     'sl_r_split' => 'Everything else · 50/50',
     'sl_to_counter' => 'Counter',
     'sl_tap_from' => 'tap from',
+    'fm_f_logo_hint' => 'PNG, JPG or WebP, up to 6 MB. Shown at the top of your form. Square works best.',
+    'fm_f_logo_url' => '…or paste an image URL instead',
 ];

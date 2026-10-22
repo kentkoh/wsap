@@ -83,7 +83,7 @@ $old = fn(string $k) => e((string) ($_POST[$k] ?? ''));
   :root{--f-bg:<?= $theme['bg'] ?>;--f-text:<?= $theme['text'] ?>;--f-title:<?= $theme['title'] ?>;--f-bar:<?= $theme['bar'] ?>;--f-btn:<?= $theme['button'] ?>}
   body{background:var(--f-bg);color:var(--f-text)}
   .fpage{max-width:560px;margin:0 auto;padding:28px 16px 60px}
-  .fhead{text-align:center;margin-bottom:22px}.fhead img{max-height:64px;margin:0 auto 12px;border-radius:12px}
+  .fhead{text-align:center;margin-bottom:22px}.fhead img{height:72px;width:72px;object-fit:cover;margin:0 auto 14px;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.12);display:block}
   .fhead h1{color:var(--f-title);font-size:26px}.fhead p{color:var(--f-text);opacity:.8;font-size:15px;margin:8px 0 0}
   .fcard{background:#fff;border-radius:20px;padding:24px;box-shadow:var(--shadow-1)}
   .fbar{height:6px;background:rgba(0,0,0,.08);border-radius:999px;overflow:hidden;margin-bottom:20px}.fbar i{display:block;height:100%;background:var(--f-bar);transition:width .3s}
