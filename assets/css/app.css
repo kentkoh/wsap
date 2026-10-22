@@ -254,7 +254,8 @@ textarea.input { min-height: 96px; resize: vertical; }
 .footer-grid .brand a { display: inline; }
 .footer-tag { color: var(--ink-2); margin: 12px 0 6px; max-width: 36ch; }
 .footer-domains { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); }
-.footer-bottom { margin-top: 36px; color: var(--ink-3); font-size: 13px; }
+.footer-bottom { margin-top: 36px; color: var(--ink-3); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; }
+.footer-disclaimer { max-width: 560px; }
 @media (max-width: 700px) { .footer-grid { grid-template-columns: 1fr 1fr; } .footer-grid > div:first-child { grid-column: span 2; } }
 
 /* ---- auth pages */

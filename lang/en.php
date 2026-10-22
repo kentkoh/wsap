@@ -155,6 +155,7 @@ return [
     'footer_privacy' => 'Privacy',
     'footer_contact' => 'WhatsApp us',
     'footer_lang'    => 'Language',
+    'footer_disclaimer' => 'WSAP is neither associated with nor sponsored by WhatsApp Inc. WhatsApp is a trademark of WhatsApp LLC.',
 
     // auth
     'auth_signup_title' => 'Create your account',

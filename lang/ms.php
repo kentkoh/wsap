@@ -145,6 +145,7 @@ return [
     'footer_privacy' => 'Privasi',
     'footer_contact' => 'WhatsApp kami',
     'footer_lang'    => 'Bahasa',
+    'footer_disclaimer' => 'WSAP tidak berkaitan dengan dan tidak ditaja oleh WhatsApp Inc. WhatsApp ialah tanda dagangan WhatsApp LLC.',
 
     'auth_signup_title' => 'Buat akaun anda',
     'auth_signup_lead'  => 'Simpan semua link di satu tempat dengan kiraan klik. Percuma selamanya.',

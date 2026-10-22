@@ -131,7 +131,7 @@ function page_end(): void
       <a href="?lang=ms">Bahasa Melayu</a>
     </div>
   </div>
-  <div class="wrap footer-bottom">© <?= date('Y') ?> <?= e($site) ?> · Malaysia</div>
+  <div class="wrap footer-bottom"><span>© <?= date('Y') ?> <?= e($site) ?> · Malaysia</span><span class="footer-disclaimer"><?= e(t('footer_disclaimer')) ?></span></div>
 </footer>
 <script src="/assets/js/app.js?v=<?= filemtime(WSAP_ROOT . '/assets/js/app.js') ?>" defer></script>
 <script src="/assets/js/geo.js?v=<?= filemtime(WSAP_ROOT . '/assets/js/geo.js') ?>" defer></script>
