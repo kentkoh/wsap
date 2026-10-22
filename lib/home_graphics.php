@@ -104,59 +104,79 @@ function hg_tile_art(string $kind, string $domain): string
 /** Product flow diagrams (SVG). $kind: link | smart | form | shop */
 function hg_flow(string $kind, string $domain, string $color): string
 {
+    // Every card: one visitor dot leaves the chip, pauses on the middle element (which lights up), then drops to
+    // WhatsApp (green ring pulse) and fades. Sequenced with SMIL so it needs no JS. IDs are prefixed per card
+    // because all four SVGs share one page.
     $wa = '<g transform="translate(%d,%d)"><circle r="18" fill="#25d366"/><g transform="translate(-10,-10) scale(.83)" fill="#fff">' . substr(hg_wa_svg(24), strpos(hg_wa_svg(24), '<path'), -6) . '</g></g>';
     $chip = fn(string $txt, int $w) => '<g transform="translate(' . (115 - $w / 2) . ',14)"><rect width="' . $w . '" height="30" rx="15" fill="#fff" stroke="#e2e1d8"/><text x="' . ($w / 2) . '" y="19" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#10201a">' . e($txt) . '</text></g>';
     $cursor = '<g class="svg-cursor"><path d="M0 0l12 7.5-5.2 1.1L10 16l-2.2.8-3.2-7.4L0 13z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></g>';
+    $line = fn(int $x, int $y1, int $y2) => '<line x1="' . $x . '" y1="' . $y1 . '" x2="' . $x . '" y2="' . $y2 . '" stroke="' . $color . '" stroke-width="2" stroke-dasharray="5 5" opacity=".5"/>';
+    // Green ring that pulses out of a WhatsApp logo when leg $after ends.
+    $ring = fn(int $x, string $after) => '<circle cx="' . $x . '" cy="215" r="18" fill="none" stroke="#25d366" stroke-width="3" opacity="0"><animate attributeName="r" values="18;32" dur=".8s" begin="' . $after . '.end"/><animate attributeName="opacity" values=".9;0" dur=".8s" begin="' . $after . '.end"/></circle>';
+    // A flash of $attr on an element: base -> $hot -> base, starting at $begin.
+    $flash = fn(string $attr, string $base, string $hot, string $begin, string $dur = '1.1s') => '<animate attributeName="' . $attr . '" values="' . $base . ';' . $hot . ';' . $hot . ';' . $base . '" keyTimes="0;.15;.7;1" dur="' . $dur . '" begin="' . $begin . '"/>';
+    // The travelling dot. $legs = [[pathToMiddle, pathToWhatsApp], ...]; ids {p}a{n} / {p}b{n}. $hold = pause on the middle element.
+    $dot = function (string $p, array $legs, string $hold) use ($color): string {
+        $n = count($legs);
+        $out = '<circle r="5" fill="' . $color . '" stroke="#fff" stroke-width="1.5" opacity="0">';
+        $as = [];
+        $bs = [];
+        foreach ($legs as $i => [$toMid, $toWa]) {
+            $k = $i + 1;
+            $beginA = $i === 0 ? '0.4s;' . $p . 'b' . $n . '.end+1.4s' : $p . 'b' . $i . '.end+1.2s';
+            $out .= '<animateMotion id="' . $p . 'a' . $k . '" begin="' . $beginA . '" dur="1.2s" path="' . $toMid . '" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
+                . '<animateMotion id="' . $p . 'b' . $k . '" begin="' . $p . 'a' . $k . '.end+' . $hold . '" dur=".6s" path="' . $toWa . '" fill="freeze"/>';
+            $as[] = $p . 'a' . $k . '.begin';
+            $bs[] = $p . 'b' . $k . '.end';
+        }
+        return $out . '<animate attributeName="opacity" values="0;1" dur=".25s" begin="' . implode(';', $as) . '" fill="freeze"/>'
+            . '<animate attributeName="opacity" values="1;0" dur=".35s" begin="' . implode(';', $bs) . '" fill="freeze"/></circle>';
+    };
     $svg = '<svg viewBox="0 0 230 250" xmlns="http://www.w3.org/2000/svg">';
     switch ($kind) {
         case 'link':
-            $svg .= $chip($domain . '/yourbrand', 150) . '<g transform="translate(112,40)">' . $cursor . '</g>'
-                . '<line class="flow-line" x1="115" y1="48" x2="115" y2="100" stroke="' . $color . '" stroke-width="2"/><circle class="flow-dot" cx="115" cy="48" r="4" fill="' . $color . '"/>'
-                . '<g transform="translate(70,100)"><rect width="90" height="42" rx="21" fill="#fff" stroke="' . $color . '" stroke-width="2"/><path d="M38 21h14M40 15a6 6 0 0 0 0 12h3M50 27a6 6 0 0 0 0-12h-3" stroke="' . $color . '" stroke-width="2" fill="none" stroke-linecap="round"/></g>'
-                . '<line class="flow-line" x1="115" y1="142" x2="115" y2="195" stroke="' . $color . '" stroke-width="2"/>' . sprintf($wa, 115, 215);
+            $svg .= $chip($domain . '/yourbrand', 150) . '<g transform="translate(112,40)">' . $cursor . '</g>' . $line(115, 48, 100)
+                . '<g transform="translate(70,100)"><rect width="90" height="42" rx="21" fill="#fff" stroke="' . $color . '" stroke-width="2">' . $flash('fill', '#fff', $color, 'lka1.end') . '</rect>'
+                . '<path d="M38 21h14M40 15a6 6 0 0 0 0 12h3M50 27a6 6 0 0 0 0-12h-3" stroke="' . $color . '" stroke-width="2" fill="none" stroke-linecap="round">' . $flash('stroke', $color, '#fff', 'lka1.end') . '</path></g>'
+                . $line(115, 142, 195) . $ring(115, 'lkb1') . sprintf($wa, 115, 215)
+                . $dot('lk', [['M115 48V98', 'M115 144V196']], '.9s');
             break;
         case 'smart':
-            // One visitor dot: chip → person 1 (person lights up) → WhatsApp 1, then person 2, then 3. SMIL-sequenced.
             $svg .= $chip($domain . '/yourteam', 150) . '<g transform="translate(112,40)">' . $cursor . '</g>'
                 . '<path d="M115 48V95M45 95H185M45 95V120M115 95V120M185 95V120" stroke="' . $color . '" stroke-width="2" fill="none" stroke-dasharray="5 5" opacity=".5"/>';
             foreach ([45, 115, 185] as $i => $x) {
                 $n = $i + 1;
                 $svg .= '<g transform="translate(' . $x . ',140)" stroke="' . $color . '" stroke-width="2">'
-                    . '<circle r="20" fill="#fff"><animate attributeName="fill" values="#fff;' . $color . ';' . $color . ';#fff" keyTimes="0;.15;.7;1" dur="1.1s" begin="sa' . $n . '.end"/><animate attributeName="r" values="20;24;22;20" keyTimes="0;.2;.7;1" dur="1.1s" begin="sa' . $n . '.end"/></circle>'
-                    . '<g fill="none"><animate attributeName="stroke" values="' . $color . ';#fff;#fff;' . $color . '" keyTimes="0;.15;.7;1" dur="1.1s" begin="sa' . $n . '.end"/><circle cy="-4" r="6"/><path d="M-10 12a10 10 0 0 1 20 0"/></g>'
-                    . '</g>'
-                    . '<line x1="' . $x . '" y1="160" x2="' . $x . '" y2="195" stroke="' . $color . '" stroke-width="2" stroke-dasharray="5 5" opacity=".5"/>'
-                    . '<circle cx="' . $x . '" cy="215" r="18" fill="none" stroke="#25d366" stroke-width="3" opacity="0"><animate attributeName="r" values="18;32" dur=".8s" begin="sb' . $n . '.end"/><animate attributeName="opacity" values=".9;0" dur=".8s" begin="sb' . $n . '.end"/></circle>'
-                    . sprintf($wa, $x, 215);
+                    . '<circle r="20" fill="#fff">' . $flash('fill', '#fff', $color, 'sa' . $n . '.end') . '<animate attributeName="r" values="20;24;22;20" keyTimes="0;.2;.7;1" dur="1.1s" begin="sa' . $n . '.end"/></circle>'
+                    . '<g fill="none">' . $flash('stroke', $color, '#fff', 'sa' . $n . '.end') . '<circle cy="-4" r="6"/><path d="M-10 12a10 10 0 0 1 20 0"/></g></g>'
+                    . $line($x, 160, 195) . $ring($x, 'sb' . $n) . sprintf($wa, $x, 215);
             }
-            // The travelling dot. Legs: saN chip→person N (pause while the person lights up), sbN person N→WhatsApp N.
-            $svg .= '<circle r="5" fill="' . $color . '" stroke="#fff" stroke-width="1.5" opacity="0">'
-                . '<animateMotion id="sa1" begin="0.4s;sb3.end+1.4s" dur="1.2s" path="M115 48V95H45V118" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
-                . '<animateMotion id="sb1" begin="sa1.end+.8s" dur=".6s" path="M45 162V196" fill="freeze"/>'
-                . '<animateMotion id="sa2" begin="sb1.end+1.2s" dur="1.2s" path="M115 48V118" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
-                . '<animateMotion id="sb2" begin="sa2.end+.8s" dur=".6s" path="M115 162V196" fill="freeze"/>'
-                . '<animateMotion id="sa3" begin="sb2.end+1.2s" dur="1.2s" path="M115 48V95H185V118" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .2 1"/>'
-                . '<animateMotion id="sb3" begin="sa3.end+.8s" dur=".6s" path="M185 162V196" fill="freeze"/>'
-                . '<animate attributeName="opacity" values="0;1" dur=".25s" begin="sa1.begin;sa2.begin;sa3.begin" fill="freeze"/>'
-                . '<animate attributeName="opacity" values="1;0" dur=".35s" begin="sb1.end;sb2.end;sb3.end" fill="freeze"/>'
-                . '</circle>';
+            $svg .= $dot('s', [['M115 48V95H45V118', 'M45 162V196'], ['M115 48V118', 'M115 162V196'], ['M115 48V95H185V118', 'M185 162V196']], '.8s');
             break;
         case 'form':
-            $svg .= $chip($domain . '/booking', 140) . '<g transform="translate(112,40)">' . $cursor . '</g>'
-                . '<line class="flow-line" x1="115" y1="48" x2="115" y2="85" stroke="' . $color . '" stroke-width="2"/><circle class="flow-dot" cx="115" cy="48" r="4" fill="' . $color . '"/>';
+            $svg .= $chip($domain . '/booking', 140) . '<g transform="translate(112,40)">' . $cursor . '</g>' . $line(115, 48, 86);
             foreach ([88, 114, 140] as $i => $y) {
-                $svg .= '<g transform="translate(55,' . $y . ')"><rect width="120" height="20" rx="10" fill="#fff" stroke="' . $color . '" stroke-width="2"/><rect x="10" y="8" width="' . (50 + $i * 12) . '" height="4" rx="2" fill="#e2e1d8"/><circle cx="106" cy="10" r="6" fill="' . $color . '"/><path d="M103 10l2 2 4-4" stroke="#fff" stroke-width="1.6" fill="none"/></g>';
+                $b = 'fma1.end+' . ($i * 0.3) . 's'; // rows tick one after another
+                $svg .= '<g transform="translate(55,' . $y . ')"><rect width="120" height="20" rx="10" fill="#fff" stroke="' . $color . '" stroke-width="2">' . $flash('fill', '#fff', $color, $b, '.9s') . '</rect>'
+                    . '<rect x="10" y="8" width="' . (50 + $i * 12) . '" height="4" rx="2" fill="#e2e1d8">' . $flash('fill', '#e2e1d8', '#fff', $b, '.9s') . '</rect>'
+                    . '<circle cx="106" cy="10" r="6" fill="' . $color . '"><animate attributeName="r" values="6;8.5;6" dur=".45s" begin="' . $b . '"/>' . $flash('fill', $color, '#fff', $b, '.9s') . '</circle>'
+                    . '<path d="M103 10l2 2 4-4" stroke="#fff" stroke-width="1.6" fill="none">' . $flash('stroke', '#fff', $color, $b, '.9s') . '</path></g>';
             }
-            $svg .= '<line class="flow-line" x1="115" y1="162" x2="115" y2="195" stroke="' . $color . '" stroke-width="2"/>' . sprintf($wa, 115, 215);
+            $svg .= $line(115, 162, 195) . $ring(115, 'fmb1') . sprintf($wa, 115, 215)
+                . $dot('fm', [['M115 48V86', 'M115 162V196']], '1.5s');
             break;
         case 'shop':
-            $svg .= $chip($domain . '/yourshop', 145) . '<g transform="translate(112,40)">' . $cursor . '</g>'
-                . '<line class="flow-line" x1="115" y1="48" x2="115" y2="82" stroke="' . $color . '" stroke-width="2"/><circle class="flow-dot" cx="115" cy="48" r="4" fill="' . $color . '"/>';
+            $svg .= $chip($domain . '/yourshop', 145) . '<g transform="translate(112,40)">' . $cursor . '</g>' . $line(115, 48, 82);
             foreach ([[62, 84], [100, 84], [138, 84]] as $i => [$x, $y]) {
-                $svg .= '<rect x="' . $x . '" y="' . $y . '" width="30" height="30" rx="7" fill="' . ['#f5d9a8', '#e7d2bd', '#ffe9a8'][$i] . '" stroke="' . $color . '" stroke-width="1.5"/>';
+                $b = 'sha1.end+' . ($i * 0.25) . 's'; // items get picked one after another
+                $svg .= '<rect x="' . $x . '" y="' . $y . '" width="30" height="30" rx="7" fill="' . ['#f5d9a8', '#e7d2bd', '#ffe9a8'][$i] . '" stroke="' . $color . '" stroke-width="1.5">'
+                    . '<animate attributeName="stroke-width" values="1.5;5;1.5" dur=".5s" begin="' . $b . '"/><animate attributeName="y" values="' . $y . ';' . ($y - 5) . ';' . $y . '" dur=".5s" begin="' . $b . '"/></rect>';
             }
-            $svg .= '<g transform="translate(62,128)"><rect width="106" height="30" rx="15" fill="#fff" stroke="' . $color . '" stroke-width="2"/><path d="M14 10h4l3 10h12l2-7H19" stroke="' . $color . '" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="23" r="1.5" fill="' . $color . '"/><circle cx="31" cy="23" r="1.5" fill="' . $color . '"/><text x="68" y="19" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#10201a">RM24.80</text></g>'
-                . '<line class="flow-line" x1="115" y1="158" x2="115" y2="195" stroke="' . $color . '" stroke-width="2"/>' . sprintf($wa, 115, 215);
+            $svg .= '<g transform="translate(62,128)"><rect width="106" height="30" rx="15" fill="#fff" stroke="' . $color . '" stroke-width="2">' . $flash('fill', '#fff', $color, 'sha1.end+.8s', '.9s') . '</rect>'
+                . '<g stroke="' . $color . '" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' . $flash('stroke', $color, '#fff', 'sha1.end+.8s', '.9s') . '<path d="M14 10h4l3 10h12l2-7H19"/><circle cx="22" cy="23" r="1.5" fill="' . $color . '"/><circle cx="31" cy="23" r="1.5" fill="' . $color . '"/></g>'
+                . '<text x="68" y="19" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#10201a">' . $flash('fill', '#10201a', '#fff', 'sha1.end+.8s', '.9s') . 'RM24.80</text></g>'
+                . $line(115, 158, 195) . $ring(115, 'shb1') . sprintf($wa, 115, 215)
+                . $dot('sh', [['M115 48V80', 'M115 160V196']], '1.7s');
             break;
     }
     return $svg . '</svg>';
