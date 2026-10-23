@@ -10,8 +10,7 @@ if (!empty($_SERVER['REQUEST_METHOD']) || !empty($_SERVER['HTTP_HOST'])) {
     exit;
 }
 $argv = $argv ?? ($_SERVER['argv'] ?? []);
-echo 'PHP ' . PHP_VERSION . ' (' . PHP_SAPI . ")
-";
+echo 'PHP ' . PHP_VERSION . ' (' . PHP_SAPI . ")\n";
 require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/mail.php';
 
