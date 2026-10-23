@@ -10,7 +10,8 @@ $plink = price('premium');
 $domain = current_domain();
 $u = current_user();
 $cta = $u ? '/upgrade' : '/signup';
-$split = fn(string $k) => explode('|', t($k));
+$maxDest = smart_max_destinations();
+$split = fn(string $k) => explode('|', t($k, ['n' => $maxDest > 0 ? $maxDest : '∞']));
 
 page_start(['title' => t('nav_p_smart') . ' — ' . t('sl_h1a') . ' ' . t('sl_h1b'), 'description' => t('sl_lead')]);
 ?>
@@ -124,7 +125,7 @@ page_start(['title' => t('nav_p_smart') . ' — ' . t('sl_h1a') . ' ' . t('sl_h1
 
 <section class="section band" id="pricing">
   <div class="wrap">
-    <div class="section-head reveal"><span class="kicker"><?= e(t('sl_price_k')) ?></span><h2><?= e(t('sl_price_t', ['price' => $price])) ?></h2><p class="lead"><?= e(t('sl_price_lead')) ?></p></div>
+    <div class="section-head reveal"><span class="kicker"><?= e(t('sl_price_k')) ?></span><h2><?= e(t('sl_price_t', ['price' => $price])) ?></h2><p class="lead"><?= e(t('sl_price_lead', ['n' => $maxDest > 0 ? $maxDest : '∞'])) ?></p></div>
     <div class="price-box reveal">
       <div class="card"><h3 style="font-size:20px"><?= e(t('ps2_inc_t')) ?></h3><ul class="inc-list"><?php foreach ($split('sl_inc') as $b): ?><li><?= e($b) ?></li><?php endforeach; ?></ul></div>
       <div class="price-big"><small style="margin:0 0 6px"><?= e(t('sl_only')) ?></small><b><?= e($price) ?></b><small><?= e(t('sl_per_month')) ?> · <?= e(t('up_year')) ?>ly</small><a class="btn btn-wa btn-lg" href="<?= e($cta) ?>">⚡ <?= e(t('sl_price_cta')) ?> →</a><p class="small" style="opacity:.75;margin:14px 0 0"><?= e(t('sl_price_note', ['plink' => $plink])) ?></p></div>

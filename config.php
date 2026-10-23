@@ -33,6 +33,7 @@ return [
   'code_length'   => 6,
   // Minimum length for custom handles / form / shop addresses (admin can override in Settings).
   'slug_min'      => 4,
+  'smart_max_destinations' => 8,   // WhatsApp numbers per Smart Link (admin-editable in Settings; 0 = unlimited)
 
   // Plans. Prices are per LINK per YEAR (walink style) in the two display currencies.
   // These are defaults only: admin can change prices and limits at /admin?tab=settings

@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+/** Max destinations (numbers) per Smart Link: settings override, else config. 0 = unlimited. */
+function smart_max_destinations(): int
+{
+    $s = setting('smart_max_destinations');
+    return $s !== '' ? (int) $s : (int) cfg('smart_max_destinations');
+}
+
 /**
  * Smart Links: one short link, several destinations.
  * Rules are evaluated in sort order; the first matching rule-based destination wins.

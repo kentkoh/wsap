@@ -17,7 +17,7 @@ if (!$link) {
 }
 $premium = link_has_smart($link, $u);
 $linkPremium = link_is_premium($link, $u);
-$maxDest = (int) setting('smart_max_destinations'); // 0 = unlimited (admin may set a cap in settings)
+$maxDest = smart_max_destinations(); // 0 = unlimited
 $err = null;
 $editing = null;
 
@@ -114,7 +114,8 @@ page_start(['title' => t('sm_title') . ' · ' . short_display($link), 'noindex' 
 <section class="app wrap">
   <p><a href="/dashboard">← <?= e(t('dash_title')) ?></a></p>
   <div class="app-head"><h1><?= e(t('sm_title')) ?> <span class="mono" style="font-size:.6em;color:var(--green-2)"><?= e(short_display($link)) ?></span></h1>
-    <?php if ($premium): ?><a class="btn btn-primary" href="/smart?id=<?= $id ?>&new=1">+ <?= e(t('sm_add')) ?></a><?php endif; ?></div>
+    <?php if ($premium && $maxDest > 0): ?><span class="muted small"><?= e(t('sm_dest_count', ['n' => count(link_destinations($id)), 'max' => $maxDest])) ?></span><?php endif; ?>
+    <?php if ($premium && ($maxDest === 0 || count(link_destinations($id)) < $maxDest)): ?><a class="btn btn-primary" href="/smart?id=<?= $id ?>&new=1">+ <?= e(t('sm_add')) ?></a><?php endif; ?></div>
   <?php if ($err): ?><div class="flash flash-error" role="alert" style="margin-bottom:16px"><?= error_html($err) ?></div><?php endif; ?>
   <p class="lead" style="font-size:15px;margin-bottom:18px"><?= e(t('sm_lead')) ?></p>
 

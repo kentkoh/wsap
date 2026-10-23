@@ -40,6 +40,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
             $min = (int) ($_POST['slug_min'] ?? 4);
             set_setting('slug_min', (string) max(3, min(10, $min)));
+            set_setting('smart_max_destinations', (string) max(0, min(100, (int) ($_POST['smart_max_destinations'] ?? 8))));
             flash('ok', 'Settings saved.');
         } elseif ($act === 'ps_add') {
             $price = max(0, (int) ($_POST['price'] ?? 299));
@@ -237,6 +238,7 @@ page_start(['title' => 'Admin', 'noindex' => true, 'body_class' => 'page-app']);
   </form>
   <form method="post" class="card form-narrow" style="margin-top:18px"><?= csrf_field() ?><input type="hidden" name="act" value="setting">
     <div class="field"><label for="announcement">Announcement bar (empty = hidden)</label><input class="input" id="announcement" name="announcement" value="<?= e(setting('announcement')) ?>"></div>
+    <div class="field"><label for="smart_max_destinations">Max WhatsApp numbers per Smart Link (0 = unlimited)</label><input class="input" id="smart_max_destinations" name="smart_max_destinations" type="number" min="0" max="100" value="<?= e((string) smart_max_destinations()) ?>" style="width:120px"></div>
     <h3 style="margin:18px 0 6px"><?= e(t('admin_handles')) ?></h3>
     <div class="field"><label for="slug_min"><?= e(t('admin_slug_min')) ?></label><input class="input" id="slug_min" name="slug_min" type="number" min="3" max="10" value="<?= e(setting('slug_min') ?: (string) cfg('slug_min')) ?>" style="width:120px"></div>
     <div class="field"><label for="blocked_words"><?= e(t('admin_blocked')) ?></label><textarea class="input mono" id="blocked_words" name="blocked_words" style="min-height:120px;font-size:13.5px" placeholder="brandname&#10;*badword"><?= e(setting('blocked_words')) ?></textarea>
