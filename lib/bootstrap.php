@@ -361,7 +361,22 @@ function currency(): string
     if (in_array($c, $allowed, true)) {
         return $cur = $c;
     }
-    return $cur = domain_cfg()['currency'];
+    // No choice yet: pick by visitor country (Malaysia → RM, elsewhere → USD, unknown → domain default) and remember it.
+    // The RM/$ toggle in the header overwrites this cookie, so visitors can always change it.
+    $auto = domain_cfg()['currency'];
+    try {
+        require_once WSAP_ROOT . '/lib/geoip.php';
+        $country = visitor_country(true);
+        if ($country !== '') {
+            $auto = $country === 'MY' ? 'MYR' : 'USD';
+        }
+    } catch (Throwable $e) {
+        error_log('currency geo: ' . $e->getMessage());
+    }
+    if (!headers_sent()) {
+        setcookie('wsap_cur', $auto, ['expires' => time() + 86400 * 365, 'path' => '/', 'samesite' => 'Lax']);
+    }
+    return $cur = $auto;
 }
 
 /** Money for a plan in the chosen display currency: "RM39" / "$9". */
