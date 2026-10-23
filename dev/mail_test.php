@@ -4,10 +4,14 @@ declare(strict_types=1);
  * Send a test email through the configured Brevo key (CLI only).
  *   php dev/mail_test.php you@example.com
  */
-if (PHP_SAPI !== 'cli') {
+// Refuse real web requests; allow cli and cPanel's php-cgi command line.
+if (!empty($_SERVER['REQUEST_METHOD']) || !empty($_SERVER['HTTP_HOST'])) {
     http_response_code(404);
     exit;
 }
+$argv = $argv ?? ($_SERVER['argv'] ?? []);
+echo 'PHP ' . PHP_VERSION . ' (' . PHP_SAPI . ")
+";
 require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/mail.php';
 
