@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/seo.php';
 require __DIR__ . '/lib/marketing.php';
 require_once __DIR__ . '/lib/home_graphics.php';
 require __DIR__ . '/lib/demo.php';
@@ -19,7 +20,7 @@ $tour = ['dashboard', 'products', 'categories', 'coupons', 'customers', 'orders'
 $cmp = [['ps2_c1a', 'ps2_c1b'], ['ps2_c2a', 'ps2_c2b'], ['ps2_c3a', 'ps2_c3b'], ['ps2_c4a', 'ps2_c4b'], ['ps2_c5a', 'ps2_c5b'], ['ps2_c6a', 'ps2_c6b']];
 $ver = filemtime(__DIR__ . '/assets/img/shop/dashboard.webp');
 
-page_start(['title' => t('nav_p_shops') . ' — ' . t('ps2_h1a') . ' ' . t('ps2_h1b'), 'description' => t('ps2_lead')]);
+page_start(['title' => t('seo_ps_title'), 'description' => t('ps2_lead'), 'jsonld' => [seo_breadcrumbs([[t('nav_home'), '/'], [t('nav_p_shops'), '/whatsapp-shop']]), seo_app(cfg('site_name') . ' ' . t('nav_p_shops'), t('ps2_lead'), '/whatsapp-shop', seo_price_amount('shop'), currency())]]);
 echo demo_popup_css();
 ?>
 <section class="hero">

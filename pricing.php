@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/seo.php';
 
 $wa = (string) cfg('support_whatsapp');
 $cur = currency();
@@ -12,7 +13,7 @@ $upgradeHref = billplz_enabled()
     : ($wa !== '' ? 'https://wa.me/' . $wa . '?text=' . rawurlencode('Hi WSAP, I want to upgrade a link to Premium.' . ($u ? ' My account: ' . $u['email'] : '')) : '/signup');
 $waitlistHref = $wa !== '' ? 'https://wa.me/' . $wa . '?text=' . rawurlencode('Hi WSAP, please add me to the Business plan waitlist.') : '/signup';
 
-page_start(['title' => t('nav_pricing'), 'description' => t('pr_lead')]);
+page_start(['title' => t('seo_pr_title'), 'description' => t('pr_lead'), 'jsonld' => [seo_breadcrumbs([[t('nav_home'), '/'], [t('nav_pricing'), '/pricing']])]]);
 ?>
 <section class="section" style="padding-top:clamp(40px,6vw,72px)">
   <div class="wrap">

@@ -11,10 +11,12 @@ declare(strict_types=1);
 function page_start(array $o = []): void
 {
     $site = (string) cfg('site_name');
-    $title = isset($o['title']) ? $o['title'] . ' · ' . $site : $site . ' — ' . t('hero_title_1') . ' ' . t('hero_title_2');
-    $desc = $o['description'] ?? t('hero_lead', ['domain' => current_domain()]);
-    $canonical = $o['canonical'] ?? (base_url() . strtok($_SERVER['REQUEST_URI'] ?? '/', '?'));
+    $path = $o['path'] ?? strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
+    $title = $o['title_raw'] ?? (isset($o['title']) ? $o['title'] . ' · ' . $site : t('seo_home_title', ['domain' => current_domain()]));
+    $desc = $o['description'] ?? t('seo_home_desc', ['domain' => current_domain()]);
+    $canonical = $o['canonical'] ?? (base_url() . $path);
     $noindex = !empty($o['noindex']);
+    require_once WSAP_ROOT . '/lib/seo.php';
     $u = current_user();
     $l = lang();
     $ga = (string) cfg('ga_id');
@@ -28,7 +30,8 @@ function page_start(array $o = []): void
 <title><?= e($title) ?></title>
 <meta name="description" content="<?= e($desc) ?>">
 <link rel="canonical" href="<?= e($canonical) ?>">
-<?php if ($noindex): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?>
+<?php if ($noindex): ?><meta name="robots" content="noindex,nofollow"><?php else: ?><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<?= seo_alternates_html($path) ?><?php endif; ?>
 <?php if ($gsv !== ''): ?><meta name="google-site-verification" content="<?= e($gsv) ?>"><?php endif; ?>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="<?= e($site) ?>">
@@ -36,7 +39,14 @@ function page_start(array $o = []): void
 <meta property="og:description" content="<?= e($desc) ?>">
 <meta property="og:url" content="<?= e($canonical) ?>">
 <meta property="og:image" content="<?= e(base_url()) ?>/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="<?= $l === 'ms' ? 'ms_MY' : 'en_US' ?>">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?= e($title) ?>">
+<meta name="twitter:description" content="<?= e($desc) ?>">
+<meta name="twitter:image" content="<?= e(base_url()) ?>/assets/img/og.png">
+<?php if (!empty($o['jsonld'])): ?><?= seo_jsonld_html($o['jsonld']) ?><?php endif; ?>
 <meta name="theme-color" content="#0b3d2e">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -122,6 +132,10 @@ function page_end(): void
       <a href="/whatsapp-shop"><?= e(t('nav_p_shops')) ?></a>
       <a href="/pricing"><?= e(t('nav_pricing')) ?></a>
       <a href="/#faq"><?= e(t('nav_faq')) ?></a>
+    </div>
+    <div>
+      <h4><?= e(t('footer_guides')) ?></h4>
+      <?php require_once WSAP_ROOT . '/lib/guides.php'; foreach (guide_slugs() as $gs => $gi): $gg = guide($gs, lang()); ?><a href="/<?= e($gs) ?>"><?= e(str_replace('{domain}', current_domain(), $gg['h1'])) ?></a><?php endforeach; ?>
     </div>
     <div>
       <h4><?= e(t('footer_legal')) ?></h4>

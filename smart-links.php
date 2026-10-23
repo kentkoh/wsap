@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/seo.php';
 require __DIR__ . '/lib/marketing.php';
 require_once __DIR__ . '/lib/home_graphics.php';
 
@@ -13,7 +14,7 @@ $cta = $u ? '/upgrade' : '/signup';
 $maxDest = smart_max_destinations();
 $split = fn(string $k) => explode('|', t($k, ['n' => $maxDest > 0 ? $maxDest : '∞']));
 
-page_start(['title' => t('nav_p_smart') . ' — ' . t('sl_h1a') . ' ' . t('sl_h1b'), 'description' => t('sl_lead')]);
+page_start(['title' => t('seo_sl_title'), 'description' => t('sl_lead'), 'jsonld' => [seo_breadcrumbs([[t('nav_home'), '/'], [t('nav_p_smart'), '/smart-links']]), seo_app(cfg('site_name') . ' ' . t('nav_p_smart'), t('sl_lead'), '/smart-links', seo_price_amount('smart'), currency())]]);
 ?>
 <section class="hero">
   <div class="wrap hero-product">

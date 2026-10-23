@@ -15,6 +15,16 @@ if ($path === '/sitemap.xml') {
     require $root . '/sitemap.php';
     return true;
 }
+if ($path === '/robots.txt') {
+    require $root . '/robots.php';
+    return true;
+}
+// SEO guide pages (mirror of the .htaccess rule)
+if (preg_match('#^/(whatsapp-link-generator|wa-me-link|whatsapp-qr-code|whatsapp-link-instagram-bio|whatsapp-business-link|walink-alternative|cara-buat-link-whatsapp)$#', $path, $m)) {
+    $_GET['g'] = $m[1];
+    require $root . '/guide.php';
+    return true;
+}
 // Real static files / php files
 $file = $root . $path;
 if (is_file($file)) {
@@ -47,6 +57,5 @@ if (preg_match('#^/([A-Za-z0-9-]{3,30})$#', $path, $m)) {
     require $root . '/go.php';
     return true;
 }
-http_response_code(404);
-echo 'Not found';
+require $root . '/404.php';
 return true;

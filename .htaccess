@@ -1,5 +1,6 @@
 Options -Indexes
 DirectoryIndex index.php
+ErrorDocument 404 /404.php
 AddDefaultCharset utf-8
 
 <IfModule mod_rewrite.c>
@@ -12,6 +13,10 @@ AddDefaultCharset utf-8
   RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
 
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
+  RewriteRule ^robots\.txt$ robots.php [L]
+
+  # SEO guide pages (content in lib/guides.php); these slugs are reserved so no short link can use them
+  RewriteRule ^(whatsapp-link-generator|wa-me-link|whatsapp-qr-code|whatsapp-link-instagram-bio|whatsapp-business-link|walink-alternative|cara-buat-link-whatsapp)/?$ guide.php?g=$1 [L,QSA]
 
   # Links, forms and shops all live at the root (wsap.me/slug). Old /f/ and /s/ addresses redirect.
   RewriteRule ^[fs]/([A-Za-z0-9-]{3,30})/?$ /$1 [R=301,L]
@@ -36,9 +41,6 @@ RedirectMatch 404 ^/(db|lib|lang|dev|_old)(/|$)
 <FilesMatch "\.(md|sql|log|sqlite|ini|sh)$">
   Require all denied
 </FilesMatch>
-<Files "robots.txt">
-  Require all granted
-</Files>
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"

@@ -3,12 +3,13 @@ declare(strict_types=1);
 /** /members — why create a free account: guest vs member vs Premium. */
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/seo.php';
 require __DIR__ . '/lib/marketing.php';
 require __DIR__ . '/lib/auth_ui.php';
 
 $domain = current_domain();
 $user = current_user();
-page_start(['title' => t('mp_title'), 'description' => t('mp_lead')]);
+page_start(['title' => t('mp_title'), 'description' => t('mp_lead'), 'jsonld' => [seo_breadcrumbs([[t('nav_home'), '/'], [t('mp_title'), '/members']])]]);
 ?>
 <section class="hero">
   <div class="wrap hero-product">

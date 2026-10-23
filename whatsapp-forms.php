@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/seo.php';
 require __DIR__ . '/lib/marketing.php';
 require_once __DIR__ . '/lib/home_graphics.php';
 require __DIR__ . '/lib/demo.php';
@@ -15,7 +16,7 @@ $demos = [
     ['demo-tuition', '📚', 'pf_i5_t', 'pf_i5_d', '#ede9fe'],
     ['demo-catering', '🍛', 'pf_i6_t', 'pf_i6_d', '#fee2e2'],
 ];
-page_start(['title' => t('nav_p_forms') . ' — ' . t('pf_title_1') . ' ' . t('pf_title_2'), 'description' => t('pf_lead')]);
+page_start(['title' => t('seo_pf_title'), 'description' => t('pf_lead'), 'jsonld' => [seo_breadcrumbs([[t('nav_home'), '/'], [t('nav_p_forms'), '/whatsapp-forms']]), seo_app(cfg('site_name') . ' ' . t('nav_p_forms'), t('pf_lead'), '/whatsapp-forms', seo_price_amount('form'), currency())]]);
 echo demo_popup_css();
 ?>
 <section class="hero">

@@ -12,6 +12,9 @@ declare(strict_types=1);
 
 /** Slugs that can never be link codes (they are pages or folders). */
 const RESERVED_CODES = [
+    // SEO guide pages and system files (see .htaccess)
+    'whatsapp-link-generator', 'wa-me-link', 'whatsapp-qr-code', 'whatsapp-link-instagram-bio', 'whatsapp-business-link', 'walink-alternative', 'cara-buat-link-whatsapp',
+    'guide', 'robots', 'sitemap', '404', 'members', 'unsubscribe', 'guides',
     'admin', 'api', 'assets', 'auth', 'lib', 'db', 'dev', 'lang', 'login', 'logout', 'signup', 'register',
     'dashboard', 'pricing', 'premium', 'faq', 'terms', 'privacy', 'contact', 'help', 'blog', 'about',
     'link', 'links', 'new', 'edit', 'delete', 'go', 'qr', 'analytics', 'stats', 'settings', 'account',

@@ -2,12 +2,13 @@
 declare(strict_types=1);
 require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/layout.php';
+require __DIR__ . '/lib/seo.php';
 require __DIR__ . '/lib/marketing.php';
 require_once __DIR__ . '/lib/home_graphics.php';
 
 $price = price('premium');
 $domain = current_domain();
-page_start(['title' => t('nav_p_links') . ' — ' . t('pl_title_1') . ' ' . t('pl_title_2'), 'description' => t('pl_lead')]);
+page_start(['title' => t('seo_pl_title', ['domain' => $domain]), 'description' => t('pl_lead'), 'jsonld' => [seo_breadcrumbs([[t('nav_home'), '/'], [t('nav_p_links'), '/premium-links']]), seo_app(cfg('site_name') . ' ' . t('nav_p_links'), t('pl_lead'), '/premium-links', seo_price_amount('premium'), currency())]]);
 ?>
 <section class="hero">
   <div class="wrap hero-product">
