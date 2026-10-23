@@ -11,8 +11,22 @@ if (!empty($_SERVER['REQUEST_METHOD']) || !empty($_SERVER['HTTP_HOST'])) {
 }
 $argv = $argv ?? ($_SERVER['argv'] ?? []);
 echo 'PHP ' . PHP_VERSION . ' (' . PHP_SAPI . ")\n";
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+set_exception_handler(function (Throwable $e): void {
+    echo 'ERROR: ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() . "\n";
+    exit(1);
+});
+register_shutdown_function(function (): void {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        echo 'FATAL: ' . $e['message'] . ' in ' . $e['file'] . ':' . $e['line'] . "\n";
+    }
+});
 require __DIR__ . '/../lib/bootstrap.php';
 require __DIR__ . '/../lib/mail.php';
+echo "Libraries loaded.\n";
 
 $to = (string) ($argv[1] ?? '');
 if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
