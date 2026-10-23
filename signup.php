@@ -39,6 +39,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 page_start(['title' => t('auth_signup_title'), 'noindex' => true, 'body_class' => 'page-auth']);
 auth_card_start(t('auth_signup_title'), t('auth_signup_lead'));
 form_error($err);
+if (isset($_GET['claim']) && !empty($_SESSION['anon_key'])) {
+    echo '<div class="flash flash-ok" style="margin-bottom:14px">' . e(t('auth_claim_note')) . '</div>';
+}
 echo google_button();
 ?>
 <form method="post" novalidate>

@@ -28,6 +28,11 @@ if ($premium && isset($_GET['csv'])) {
 }
 
 $s = $premium ? link_stats($id, $days) : null;
+$free = null;
+if (!$premium) {
+    $cnt = fn(string $extra, array $p) => (int) db_value('SELECT COUNT(*) FROM clicks WHERE link_id = ? AND is_bot = 0 ' . $extra, [$id, ...$p]);
+    $free = ['d30' => $cnt('AND created_at >= ?', [now(-30 * 86400)]), 'd7' => $cnt('AND created_at >= ?', [now(-7 * 86400)]), 'qr' => $cnt('AND is_qr = 1', [])];
+}
 $maxDay = $s ? max(1, ...array_map(fn($r) => (int) $r['n'], $s['by_day'] ?: [['n' => 1]])) : 1;
 
 page_start(['title' => t('an_title') . ' · ' . short_display($link), 'noindex' => true, 'body_class' => 'page-app']);
@@ -43,7 +48,12 @@ page_start(['title' => t('an_title') . ' · ' . short_display($link), 'noindex' 
   </div>
 
   <?php if (!$premium): ?>
-    <div class="stat-grid"><div class="stat"><b><?= number_format((int) $link['clicks']) ?></b><span><?= e(t('an_clicks')) ?></span></div></div>
+    <div class="stat-grid">
+      <div class="stat"><b><?= number_format((int) $link['clicks']) ?></b><span><?= e(t('an_clicks')) ?> · <?= e(t('an_all_time')) ?></span></div>
+      <div class="stat"><b><?= number_format($free['d30']) ?></b><span><?= e(t('an_range', ['n' => 30])) ?></span></div>
+      <div class="stat"><b><?= number_format($free['d7']) ?></b><span><?= e(t('an_range', ['n' => 7])) ?></span></div>
+      <div class="stat"><b><?= number_format($free['qr']) ?></b><span><?= e(t('an_qr')) ?></span></div>
+    </div>
     <div class="locked">🔒 <?= e(t('an_free_note')) ?> <a href="/upgrade?id=<?= $id ?>"><b><?= e(t('dash_upgrade')) ?> →</b></a></div>
   <?php else: ?>
     <div class="stat-grid">

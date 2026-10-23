@@ -5,6 +5,13 @@ require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/app_nav.php';
 
 $u = require_login();
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['notify_report'])) {
+    csrf_check();
+    db_exec('UPDATE users SET notify_report = ? WHERE id = ?', [(int) $_POST['notify_report'] ? 1 : 0, (int) $u['id']]);
+    flash('ok', t('dash_report_saved'));
+    redirect('/dashboard');
+}
+$reportOn = !array_key_exists('notify_report', $u) || (int) $u['notify_report'] === 1;
 $links = user_links((int) $u['id']);
 $plan = user_plan($u);
 $max = plan_max_links($plan);
@@ -62,5 +69,6 @@ page_start(['title' => t('dash_title'), 'noindex' => true, 'body_class' => 'page
     <?php endforeach; ?>
   </div>
   <?php endif; ?>
+  <form method="post" class="report-pref"><?= csrf_field() ?><span>📬 <?= e($reportOn ? t('dash_report_on') : t('dash_report_off')) ?></span><input type="hidden" name="notify_report" value="<?= $reportOn ? 0 : 1 ?>"><button class="linklike" type="submit"><?= e($reportOn ? t('dash_report_turn_off') : t('dash_report_turn_on')) ?></button></form>
 </section>
 <?php page_end();

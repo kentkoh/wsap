@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   plan          VARCHAR(12)  NOT NULL DEFAULT 'free',      -- free | premium | business
   plan_until    DATETIME     NULL,
   verified_at   DATETIME     NULL,
+  notify_report TINYINT(1)   NOT NULL DEFAULT 1,            -- monthly email report opt-in
   created_at    DATETIME     NOT NULL,
   last_login_at DATETIME     NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

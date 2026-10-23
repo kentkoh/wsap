@@ -94,12 +94,21 @@
       try {
         const r = await fetch('/api/create.php', { method: 'POST', body: fd, headers: { 'X-CSRF': form.dataset.csrf } });
         const j = await r.json();
-        if (!j.ok) throw new Error(j.error || 'Error');
+        if (!j.ok) {
+          if (j.need_account) { showGate(); return; }
+          throw new Error(j.error || 'Error');
+        }
         showResult(j.link);
       } catch (e) {
         err.textContent = e.message; err.classList.add('show');
       } finally { btn.disabled = false; btn.textContent = label; }
     });
+    function showGate() {
+      const gate = $('#gen-gate'); if (!gate) return;
+      gate.hidden = false; $('#gen-fields').style.display = 'none';
+      form.closest('.gen-card').classList.add('has-result');
+      gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     function showResult(link) {
       $('#res-url').textContent = link.display;
       $('#res-copy').setAttribute('data-copy', link.url);

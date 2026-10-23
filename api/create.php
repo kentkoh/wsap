@@ -30,7 +30,12 @@ try {
         }
         $opts['user_id'] = (int) $user['id'];
     } else {
-        $opts['session_key'] = anon_session_key();
+        // Guests get one link per browser session; the next one asks for a (free) account.
+        $key = anon_session_key();
+        if ((int) db_value('SELECT COUNT(*) FROM links WHERE session_key = ?', [$key]) >= 1) {
+            json_out(['ok' => false, 'need_account' => true, 'error' => t('gen_need_account')], 403);
+        }
+        $opts['session_key'] = $key;
     }
     $link = create_link($phone, $message, $opts);
 } catch (InvalidArgumentException $e) {

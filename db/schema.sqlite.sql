@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   plan          TEXT NOT NULL DEFAULT 'free',
   plan_until    TEXT NULL,
   verified_at   TEXT NULL,
+  notify_report INTEGER NOT NULL DEFAULT 1,
   created_at    TEXT NOT NULL,
   last_login_at TEXT NULL
 );

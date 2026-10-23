@@ -15,9 +15,10 @@ if ($id && !$link) {
 }
 $err = null;
 $domains = array_keys(cfg('domains'));
-// Free links are frozen after creation (same rule as walink); Premium links are editable.
+// Members can edit the number, message and pause state of every link they own (a free-account benefit).
+// Only the branded handle, analytics breakdown and styled QR stay Premium.
 $linkPremium = $link ? link_is_premium($link, $u) : false;
-$editable = !$link || $linkPremium;
+$editable = true;
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     csrf_check();
@@ -44,7 +45,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 }
                 $domain = in_array($_POST['domain'] ?? '', $domains, true) ? $_POST['domain'] : $link['domain'];
                 db_exec('UPDATE links SET phone = ?, message = ?, title = ?, domain = ?, active = ?, updated_at = ? WHERE id = ?',
-                    [$phone, $message, mb_substr(trim($title), 0, 80), $domain, $linkPremium ? $active : 1, now(), (int) $link['id']]);
+                    [$phone, $message, mb_substr(trim($title), 0, 80), $domain, $active, now(), (int) $link['id']]);
             } else {
                 db_exec('UPDATE links SET title = ?, updated_at = ? WHERE id = ?', [mb_substr(trim($title), 0, 80), now(), (int) $link['id']]);
             }
@@ -142,7 +143,7 @@ page_start(['title' => $link ? t('link_edit_title') : t('link_new_title'), 'noin
         </div>
       </div>
       <?php endif; ?>
-      <?php if ($link && $linkPremium): ?>
+      <?php if ($link): ?>
       <div class="field"><label class="switch"><input type="checkbox" name="active" <?= (int) $link['active'] ? 'checked' : '' ?>> <?= e(t('link_active')) ?></label></div>
       <?php endif; ?>
     </fieldset>

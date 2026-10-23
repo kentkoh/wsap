@@ -5,6 +5,7 @@ require __DIR__ . '/lib/layout.php';
 require __DIR__ . '/lib/countries.php';
 require __DIR__ . '/lib/ua.php';
 require __DIR__ . '/lib/home_graphics.php';
+require __DIR__ . '/lib/auth_ui.php';
 require __DIR__ . '/lib/marketing.php';
 require __DIR__ . '/lib/demo.php';
 
@@ -74,6 +75,13 @@ echo demo_popup_css();
         </div>
       </form>
 
+      <div class="gen-gate" id="gen-gate" hidden>
+        <span class="kicker"><?= e(t('gen_gate_k')) ?></span>
+        <h2 style="font-size:26px;margin-bottom:8px"><?= e(t('gen_gate_t')) ?></h2>
+        <p class="muted"><?= e(t('gen_gate_d')) ?></p>
+        <div class="save-btns" style="margin-top:16px"><?= google_button() ?><a class="btn btn-wa" href="/signup?claim=1"><?= e(t('res_save_email')) ?> →</a><a class="btn btn-ghost" href="/login?claim=1"><?= e(t('nav_login')) ?></a></div>
+        <p class="small muted" style="margin-top:12px"><?= e(t('mp_cta_sub')) ?> · <a href="/members"><?= e(t('mem_more')) ?> →</a></p>
+      </div>
       <div class="result" id="gen-result" aria-live="polite">
         <span class="kicker"><?= e(t('res_kicker')) ?></span>
         <h2 style="font-size:28px;margin-bottom:16px"><?= e(t('res_title')) ?></h2>
@@ -94,9 +102,12 @@ echo demo_popup_css();
           <a class="btn btn-ghost" id="res-try" href="#" target="_blank" rel="noopener"><?= e(t('res_try')) ?> ↗</a>
           <a class="btn btn-ghost" id="res-again" href="#"><?= e(t('res_another')) ?></a>
         </div>
-        <p class="result-note"><?= e(t('res_note')) ?>
-          <?php if (!current_user()): ?><a href="/signup" id="res-save"><b><?= e(t('res_save')) ?> →</b></a><?php else: ?><a href="/dashboard"><b><?= e(t('nav_dashboard')) ?> →</b></a><?php endif; ?>
-        </p>
+        <?php if (!current_user()): ?>
+        <div class="save-box" id="res-savebox">
+          <div><b><?= e(t('res_save_t')) ?></b><p><?= e(t('res_save_d')) ?></p></div>
+          <div class="save-btns"><?= google_button() ?><a class="btn btn-primary" id="res-save" href="/signup?claim=1"><?= e(t('res_save_email')) ?> →</a><a class="small" href="/login?claim=1"><?= e(t('res_save_login')) ?></a></div>
+        </div>
+        <?php else: ?><p class="result-note"><a href="/dashboard"><b><?= e(t('nav_dashboard')) ?> →</b></a></p><?php endif; ?>
         <div class="upsell-row" style="margin-top:14px">
           <span><span class="kicker" style="margin:0 0 2px;display:block"><?= e(t('res_upsell_k', ['price' => $premPrice])) ?></span><b><?= e(t('res_upsell_t', ['domain' => $domain])) ?></b></span>
           <a href="/pricing"><?= e(t('res_upsell_cta')) ?> →</a>
@@ -157,6 +168,14 @@ $products = [
   </div>
 </section>
 
+<section class="section band" id="members">
+  <div class="wrap">
+    <div class="section-head reveal"><span class="kicker"><?= e(t('mem_k')) ?></span><h2><?= e(t('mem_t1')) ?> <span class="serif-i"><?= e(t('mem_t2')) ?></span></h2><p class="lead"><?= e(t('mem_lead')) ?></p></div>
+    <?= member_cards() ?>
+    <p class="reveal" style="margin-top:20px"><a class="btn btn-ghost" href="/members"><?= e(t('mem_more')) ?> →</a></p>
+  </div>
+</section>
+
 <section class="section" id="where">
   <div class="wrap">
     <div class="section-head reveal"><span class="kicker"><?= e(t('wh_k')) ?></span><h2><?= e(t('wh_t1')) ?> <span class="serif-i"><?= e(t('wh_t2')) ?></span></h2><p class="lead"><?= e(t('wh_lead')) ?></p></div>
@@ -185,23 +204,8 @@ $products = [
       <h2><?= e(t('cmp_title')) ?></h2>
       <p class="lead"><?= e(t('cmp_lead', ['price' => $premPrice])) ?></p>
     </div>
-    <table class="compare reveal">
-      <thead><tr><th><?= e(t('cmp_feature')) ?></th><th class="c"><?= e(t('cmp_free')) ?></th><th class="c prem"><?= e(t('cmp_premium')) ?></th></tr></thead>
-      <tbody>
-        <?php
-        $rows = [
-            ['cmp_1', true, true], ['cmp_2', true, true], ['cmp_3', 'cmp_random', true], ['cmp_4', false, true],
-            ['cmp_5', false, true], ['cmp_6', false, true], ['cmp_7', false, true], ['cmp_8', false, true],
-            ['cmp_9', true, true], ['cmp_10', false, true],
-        ];
-        foreach ($rows as [$k, $free, $prem]):
-            $cell = fn($v) => $v === true ? '<span class="yes">✓</span>' : ($v === false ? '<span class="no">—</span>' : '<span class="note">' . e(t($v)) . '</span>');
-        ?>
-        <tr><td><?= e(t($k, ['domain' => $domain])) ?></td><td class="c"><?= $cell($free) ?></td><td class="c prem"><?= $cell($prem) ?></td></tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-    <p style="margin-top:22px"><a class="btn btn-primary btn-lg" href="/pricing"><?= e(t('cmp_cta')) ?> →</a></p>
+    <?= member_compare_table($domain) ?>
+    <p style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap"><?php if (!current_user()): ?><a class="btn btn-wa btn-lg" href="/signup"><?= e(t('mem_cta')) ?> →</a><?php endif; ?><a class="btn btn-primary btn-lg" href="/pricing"><?= e(t('cmp_cta')) ?> →</a></p>
   </div>
 </section>
 

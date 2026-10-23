@@ -115,6 +115,7 @@ function page_end(): void
     <div>
       <h4><?= e(t('footer_product')) ?></h4>
       <a href="/#generator"><?= e(t('nav_free')) ?></a>
+      <a href="/members"><?= e(t('footer_members')) ?></a>
       <a href="/premium-links"><?= e(t('nav_p_links')) ?></a>
       <a href="/smart-links"><?= e(t('nav_p_smart')) ?></a>
       <a href="/whatsapp-forms"><?= e(t('nav_p_forms')) ?></a>
