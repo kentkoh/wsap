@@ -197,8 +197,8 @@ h1{font-size:clamp(28px,6.5vw,40px);line-height:1.05;margin:0 0 10px;letter-spac
 @keyframes in{to{opacity:1;transform:none}}
 <?php endif; ?>
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.in{opacity:1;transform:none}}
-<?= $demo ? demo_popup_css() : '' ?>
 </style>
+<?php if ($demo): ?><?= demo_popup_css() ?><style>.demo-sheet{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#10201a}.demo-sheet h3{margin:0 0 6px;font-size:20px}.demo-sheet .kicker{font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#1f7a4f}.demo-sheet .muted{color:#5b6b63}.demo-sheet .small{font-size:13px}.demo-sheet .hint{font-size:12px;color:#5b6b63}.demo-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.demo-sheet .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:12px;font-weight:700;text-decoration:none;border:1.5px solid #0b3d2e;background:#0b3d2e;color:#fff;font:inherit;cursor:pointer}.demo-sheet .btn-ghost{background:#fff;color:#0b3d2e}</style><?php endif; ?>
 </head>
 <body class="<?= e($cfg['layout']) ?>">
 <div class="bg <?= e($cfg['background']) ?>"><?php if ($cfg['background'] === 'aurora'): ?><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><?php endif; ?></div>
