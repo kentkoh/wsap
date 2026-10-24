@@ -1331,4 +1331,8 @@ Name: Marta Ruiz',
     'footer_guides' => 'Guides',
     'nf_page_t' => 'This page does not exist',
     'nf_page_d' => 'The address may be mistyped, or the link was deleted by its owner.',
+    'lp_your_name' => 'Your name',
+    'lp_name_ph' => 'e.g. Aina',
+    'lp_powered' => 'Made with',
+    'lp_demo_cta' => 'Back to the sample',
 ];

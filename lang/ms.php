@@ -1312,4 +1312,8 @@ Nama: Marta Ruiz',
     'footer_guides' => 'Panduan',
     'nf_page_t' => 'Halaman ini tidak wujud',
     'nf_page_d' => 'Alamat mungkin tersalah taip, atau link telah dipadam oleh pemiliknya.',
+    'lp_your_name' => 'Nama anda',
+    'lp_name_ph' => 'cth. Aina',
+    'lp_powered' => 'Dibuat dengan',
+    'lp_demo_cta' => 'Kembali ke sampel',
 ];
